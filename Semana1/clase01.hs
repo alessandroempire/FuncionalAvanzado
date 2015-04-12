@@ -30,3 +30,10 @@ foldWTF foo bar baz qux wth = go wth
           go (Bar b)       = bar b
           go (Baz [(a,b)]) = baz [(a,b)]
           go (Qux wtf)     = qux $ foldWTF foo bar baz qux wtf 
+
+--insertion sort
+insort :: Ord a => [a] -> [a]
+insort xs = foldr ordenar [] xs
+    where ordenar x []     = [x]
+          ordenar x (y:ys) = if x < y then (x:y:ys)
+                                      else y : ordenar x ys 
