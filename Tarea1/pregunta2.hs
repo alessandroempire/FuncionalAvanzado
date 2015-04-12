@@ -9,3 +9,4 @@ data Dream b a = Dream a
 --Instancia Functor
 
 --Instancia Foldable
+
