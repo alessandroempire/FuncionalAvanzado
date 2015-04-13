@@ -9,4 +9,7 @@ data Dream b a = Dream a
 --Instancia Functor
 
 --Instancia Foldable
+instance Foldable Dream b a where 
+foldMap 
 
+foldr
