@@ -6,17 +6,15 @@ data Dream b a = Dream a
                | Nightmare b
                deriving (Show)
 
-dreamMap :: (b -> c) -> Dream b a -> Dream c a
-dreamMap f (Dream a)     = Dream a
-dreamMap f (Limbo (b,a)) = Limbo(f b, a)
-dreamMap f (Within a xs) = Within a $ fmap (dreamMap f) xs
-dreamMap f (Nightmare b) = Nightmare $ f b
-
---newtype Sueno b = Dream
+dreamMap :: (a -> c) -> Dream b a -> Dream b c
+dreamMap f (Dream a)     = Dream $ f a
+dreamMap f (Limbo (b,a)) = Limbo(b, f a)
+dreamMap f (Within a xs) = Within (f a) $ fmap (dreamMap f) xs
+dreamMap f (Nightmare b) = Nightmare $ b
 
 --Instancia Functor sobre b
---instance Functor (Dream b a)  where 
---    fmap = dreamMap
+instance Functor (Dream b)  where 
+    fmap = dreamMap
 
 --Instancia Foldable
 --instance Foldable Dream b a where 
