@@ -1,4 +1,5 @@
 import Data.Sequence
+import Data.Foldable
 
 data Dream b a = Dream a
                | Limbo (b,a)
@@ -17,7 +18,8 @@ instance Functor (Dream b)  where
     fmap = dreamMap
 
 --Instancia Foldable
---instance Foldable Dream b a where 
---foldMap 
-
---foldr
+instance Foldable (Dream b) where 
+    foldr f z (Dream a)     = f a z
+    foldr f z (Limbo (b,a)) = f a z 
+    foldr f z (Within a xs) = undefined
+    foldr f z (Nightmare _) = z 
