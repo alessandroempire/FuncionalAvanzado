@@ -32,4 +32,19 @@ goBack :: Zipper a -> Zipper a
 goBack (t, (RightCrumb x l):bs) = (Branch x l t, bs)
 goBack (t, (LeftCrumb  x r):bs) = (Branch x t r, bs)
 
+modify :: (a -> a) -> Zipper a -> Zipper a
+modify f (Branch x l r, bs) = (Branch (f x) l r, bs)
+modify f (Leaf, bs)         = (Leaf, bs)
 
+attach :: Tree a -> Zipper a -> Zipper a
+attach t (_, bs) = (t, bs)
+
+tothetop :: Zipper a -> Zipper a
+tothetop (t, []) = (t, [])
+tothetop z       = tothetop $ goBack z
+
+focus :: Tree a -> Zipper a
+focus t = (t, [])
+
+defocus :: Zipper a -> Tree a
+defocus (t, _) = t
