@@ -1,6 +1,5 @@
-import Data.Sequence
+import Data.Sequence as S
 import Data.Foldable as DF
-import Data.Monoid
 
 data Dream b a = Dream a
                | Limbo (b,a)
@@ -21,4 +20,15 @@ instance Foldable (Dream b) where
     foldr f z (Limbo (b,a)) = f a z 
     foldr f z (Within a xs) = f a (DF.foldr g z xs)
         where g x acc = DF.foldr f acc x 
-    foldr f z (Nightmare _) = z 
+    foldr f z (Nightmare _) = z
+    
+--Test  
+testDream = Within 2 ( S.fromList [ Dream 4 , Limbo (3 , 4) ,
+                                    Nightmare 68 ,
+                                    Within 10
+                                    (S.fromList [ Dream 2 , Limbo (4 , 3)])
+                                  ])
+asStrings = fmap show testDream
+
+left  = DF.foldl (-) 0 testDream
+right = DF.foldr (-) 0 testDream
