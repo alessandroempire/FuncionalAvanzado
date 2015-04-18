@@ -147,7 +147,7 @@ el mínimo, con la esperanza que sea un mínimo global. Para nuestro
 ejercicio, utilizaremos
 
 \begin{lstlisting}
-> guess : : Hypothesis Double
+> guess :: Hypothesis Double
 > guess = Hypothesis { c = [0.0, 0.0, 0.0] }
 \end{lstlisting}
 
