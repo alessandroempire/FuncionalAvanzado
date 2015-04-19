@@ -63,6 +63,30 @@ type Breadcrumbs a = [Crumb a]
 
 type Zipper a = (Filesystem a, Breadcrumbs a)
 
+goDown   :: Zipper a -> Maybe (Zipper a)
+goDown = undefined
+
+goRight  :: Zipper a -> Maybe (Zipper a)
+goRight = undefined
+
+goLeft   :: Zipper a -> Maybe (Zipper a)
+goLeft = undefined
+
+goBack   :: Zipper a -> Maybe (Zipper a)
+goBack = undefined
+
+tothetop :: Zipper a -> Maybe (Zipper a)
+tothetop = undefined
+
+modify   :: (a -> a) -> Zipper a -> Maybe (Zipper a)
+modify f z = undefined
+
+focus    :: Filesystem a -> Zipper a
+focus = undefined
+
+defocus  :: Zipper a -> Filesystem a
+defocus = undefined
+
 ---------------------------------------------------------------------
 training = [
   Sample { x = [  0.1300098690745405, -0.2236751871685913 ], y = 399900 },

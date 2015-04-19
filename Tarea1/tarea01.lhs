@@ -470,14 +470,14 @@ de cualquier posición dentro de la estructura.
 >
 > type Zipper a = (Filesystem a, Breadcrumbs a)
 >
-> --goDown   ::
-> --goRight  ::
-> --goLeft   ::
-> --goBack   ::
-> --tothetop :: 
-> --modify   ::
-> --focus    ::
-> --defocus  ::
+> goDown   ::
+> goRight  ::
+> goLeft   ::
+> goBack   ::
+> tothetop :: 
+> modify   ::
+> focus    ::
+> defocus  ::
 \end{lstlisting}
 
 \end{document}
