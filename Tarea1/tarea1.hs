@@ -30,8 +30,20 @@ training :: [Sample Double]
 veryClose :: Double -> Double -> Bool
 veryClose v0 v1 = abs (v0 - v1) <= epsilon
 
-addOnes :: [Sample Double] -> Sample Double
-addOnes = undefined 
+--addOnes :: [Sample Double] -> [Sample Double]
+addOnes = test1 . test 
+
+test2 :: [Sample Double] -> [Sample Double]
+test2 xs = (:) (head xs) xs
+
+test1 :: [Double] -> Sample Double
+test1 xs = Sample {x = xs, y = 1.0}
+
+test :: [Sample Double] -> [Double]
+test = g .x . head
+    where g xs = 1 <$ xs
+
+--(Sample {x = [1.0], y = 1.0}) : training
 
 theta :: Hypothesis Double -> Sample Double -> Double
 theta h s = undefined
