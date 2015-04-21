@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveFunctor , DeriveFoldable #-}
 
+import Data.Maybe
 import Data.List
 import Data.Functor
 import Data.Monoid
@@ -97,13 +98,13 @@ type Zipper a = (Filesystem a, Breadcrumbs a)
 -----------------------------------------------------------
 goDown   :: Zipper a -> Maybe (Zipper a)
 goDown (Directory z (Directory v xs : ys), [[]] ) = Just $ (Directory v xs, 
+                                                            [Parent v [] []] :
                                                             [[Parent z [] xs]])
-
---goDown (Directory z (Directory v xs : ys), 
---        [(Parent v b bs) : xs])              = Just $ (Directory v xs,
---                                                      )
-
-goDown _                                     = Nothing
+goDown (Directory z (Directory v ys : qs), 
+        [(Parent k b bs) : xs])             = Just $ (Directory v ys,
+                                                      [Parent v [] []] :
+                                                      [(Parent k b qs) : xs] )
+goDown _                                    = Nothing
 
 goRight  :: Zipper a -> Maybe (Zipper a)
 goRight (Directory z (y:ys), [[]]) = Just $( Directory z ys, 
@@ -123,7 +124,8 @@ goBack   :: Zipper a -> Maybe (Zipper a)
 goBack = undefined
 
 tothetop :: Zipper a -> Maybe (Zipper a)
-tothetop = undefined
+tothetop (f , [[]]) = Just $ (f, [[]])
+tothetop f          = tothetop $ fromJust $ goBack f
 
 modify   :: (a -> a) -> Zipper a -> Maybe (Zipper a)
 modify f (File a, bs)         = Just (File (f a), bs)
