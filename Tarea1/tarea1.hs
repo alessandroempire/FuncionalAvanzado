@@ -32,7 +32,7 @@ veryClose v0 v1 = abs (v0 - v1) <= epsilon
 
 addOnes :: [Sample Double] -> [Sample Double]
 addOnes =  (:) =<< (f . g)
-    where g    = (1 <$ ) . x . head
+    where g    = (1 <$) . x . head
           f xs = Sample {x = xs, y = 1.0}
 
 theta :: Hypothesis Double -> Sample Double -> Double
@@ -59,17 +59,36 @@ instance (Eq a) => Monoid (Max a) where
 data Filesystem a = File a | Directory a [Filesystem a]
     deriving (Eq, Show)
 
+testFilesystem :: Filesystem Int
+testFilesystem = 
+    Directory 1 [
+                 File 2,
+                 Directory 3 [ File 31,
+                               File 32,
+                               Directory 34 [],
+                               File 35
+                             ],
+                 Directory 4 [],
+                 File 5,
+                 Directory 5 [ File 6 ]
+                ]
+
+-----------------------------------------------------------
 data Crumb a = Parent a [Filesystem a] [Filesystem a]
 
-type Breadcrumbs a = [Crumb a]
+type Breadcrumbs a = [[Crumb a]]
 
 type Zipper a = (Filesystem a, Breadcrumbs a)
 
+-----------------------------------------------------------
 goDown   :: Zipper a -> Maybe (Zipper a)
-goDown = undefined
+--goDown Directory z (d@(Directory v ys) : xs),  = Just (d, [[Parent ] : xs])
+goDown _                                     = Nothing
 
 goRight  :: Zipper a -> Maybe (Zipper a)
-goRight = undefined
+--goRight (Directory z (y:ys), [xs]) = Just $( Directory z ys, 
+--                                            [[Parent z [y:xs] []]])
+goRight _                          = Nothing
 
 goLeft   :: Zipper a -> Maybe (Zipper a)
 goLeft = undefined
@@ -84,10 +103,10 @@ modify   :: (a -> a) -> Zipper a -> Maybe (Zipper a)
 modify f z = undefined
 
 focus    :: Filesystem a -> Zipper a
-focus = undefined
+focus f = undefined --(f, [[]])
 
 defocus  :: Zipper a -> Filesystem a
-defocus = undefined
+defocus (f, _) = f
 
 ---------------------------------------------------------------------
 training = [
