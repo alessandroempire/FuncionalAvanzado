@@ -38,10 +38,22 @@ addOnes =  (:) =<< (f . g)
 theta :: Hypothesis Double -> Sample Double -> Double
 theta h s = undefined
 
+--test :: [a] -> 
+test xs ys = foldl' g 0 xs
+    where g acc x = foldl' (+) x ys 
+
 cost :: Hypothesis Double -> [Sample Double] -> Double
 cost h ss = undefined
 
---Pregunta2
+descend :: Double -> Hypothesis Double -> [Sample Double]
+                  -> Hypothesis Double
+descend alpha h ss = undefined
+
+gd :: Double -> Hypothesis Double -> [Sample Double]
+             -> [(Integer,Hypothesis Double,Double)]
+gd alpha h ss = undefined
+
+--Pregunta2----------------------------------------------------------
 newtype Max a = Max {getMax :: a}
     deriving (Eq, Read, Show)
 
@@ -63,6 +75,7 @@ testFilesystem :: Filesystem Int
 testFilesystem = 
     Directory 1 [
                  File 2,
+                 File 21,
                  Directory 3 [ File 31,
                                File 32,
                                Directory 34 [],
@@ -75,6 +88,7 @@ testFilesystem =
 
 -----------------------------------------------------------
 data Crumb a = Parent a [Filesystem a] [Filesystem a]
+    deriving (Eq, Show)
 
 type Breadcrumbs a = [[Crumb a]]
 
@@ -82,16 +96,28 @@ type Zipper a = (Filesystem a, Breadcrumbs a)
 
 -----------------------------------------------------------
 goDown   :: Zipper a -> Maybe (Zipper a)
---goDown Directory z (d@(Directory v ys) : xs),  = Just (d, [[Parent ] : xs])
+goDown (Directory z (Directory v xs : ys), [[]] ) = Just $ (Directory v xs, 
+                                                            [[Parent z [] xs]])
+
+--goDown (Directory z (Directory v xs : ys), 
+--        [(Parent v b bs) : xs])              = Just $ (Directory v xs,
+--                                                      )
+
 goDown _                                     = Nothing
 
 goRight  :: Zipper a -> Maybe (Zipper a)
---goRight (Directory z (y:ys), [xs]) = Just $( Directory z ys, 
---                                            [[Parent z [y:xs] []]])
+goRight (Directory z (y:ys), [[]]) = Just $( Directory z ys, 
+                                           [[Parent z [y] []] ] )
+goRight (Directory z (y:ys), 
+        [(Parent v b bs): xs])     = Just $ (Directory z ys, 
+                                            [[Parent z (y:b) bs] ])
 goRight _                          = Nothing
 
 goLeft   :: Zipper a -> Maybe (Zipper a)
-goLeft = undefined
+goLeft (Directory z ys, 
+       [(Parent v (x:xs) bs): cs]) = Just $ (Directory z (x:ys),
+                                            [(Parent v xs bs) : cs])
+goLeft _                           = Nothing
 
 goBack   :: Zipper a -> Maybe (Zipper a)
 goBack = undefined
@@ -100,10 +126,11 @@ tothetop :: Zipper a -> Maybe (Zipper a)
 tothetop = undefined
 
 modify   :: (a -> a) -> Zipper a -> Maybe (Zipper a)
-modify f z = undefined
+modify f (File a, bs)         = Just (File (f a), bs)
+modify f (Directory a xs, bs) = Just (Directory (f a) xs, bs)
 
 focus    :: Filesystem a -> Zipper a
-focus f = undefined --(f, [[]])
+focus f = (f, [[]])
 
 defocus  :: Zipper a -> Filesystem a
 defocus (f, _) = f
