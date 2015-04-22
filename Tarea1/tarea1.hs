@@ -125,7 +125,7 @@ goBack = undefined
 
 tothetop :: Zipper a -> Maybe (Zipper a)
 tothetop (f , []) = Just $ (f, [])
-tothetop f          = tothetop $ fromJust $ goBack f
+tothetop f        = tothetop $ fromJust $ goBack f
 
 modify   :: (a -> a) -> Zipper a -> Maybe (Zipper a)
 modify f (File a, bs)         = Just (File (f a), bs)
