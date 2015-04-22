@@ -76,6 +76,7 @@ Para el desarrollo de la solución, serán necesarios los módulos
 gráfico que muestra la convergencia.}
 
 \begin{lstlisting}
+> import Data.Maybe
 > import Data.List
 > import Data.Functor
 > import Data.Monoid
