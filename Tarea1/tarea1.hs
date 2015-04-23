@@ -110,9 +110,9 @@ goRight  :: Zipper a -> Maybe (Zipper a)
 goRight (Directory z (y:ys), []) = Just $ (Directory z ys, 
                                           [Parent z [y] []])
 goRight (Directory z (y:ys), 
-        ((Parent v b bs): xs))     = Just $ (Directory z ys, 
+        ((Parent v b bs): xs))   = Just $ (Directory z ys, 
                                             ((Parent z (y:b) bs) : xs))
-goRight _                          = Nothing
+goRight _                        = Nothing
 
 goLeft   :: Zipper a -> Maybe (Zipper a)
 goLeft (Directory z ys, 
@@ -128,10 +128,10 @@ goBack (Directory z ys, (Parent q (x:xs) []):(Parent b ks cs):ls ) =
 goBack _ = Nothing
 
 tothetop :: Zipper a -> Maybe (Zipper a)
-tothetop (f , xs@[Parent q [] []])  = Just $ (f, xs)
+tothetop (f , xs@[Parent q [] []]) = Just $ (f, xs)
 tothetop (Directory z ys , [Parent q (x:xs) []]) = 
-            tothetop $ (Directory z (x:ys), [Parent q xs []])
-tothetop f                          = tothetop $ fromJust $ goBack f
+             tothetop $ (Directory z (x:ys), [Parent q xs []])
+tothetop f = tothetop $ fromJust $ goBack f
 
 modify   :: (a -> a) -> Zipper a -> Maybe (Zipper a)
 modify f (File a, bs)         = Just (File (f a), bs)
