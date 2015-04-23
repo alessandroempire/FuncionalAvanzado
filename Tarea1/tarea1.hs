@@ -55,20 +55,29 @@ gd :: Double -> Hypothesis Double -> [Sample Double]
 gd alpha h ss = undefined
 
 --Pregunta2----------------------------------------------------------
-newtype Max a = Max {getMax :: a}
-    deriving (Eq, Read, Show)
+newtype Max a = Max {getMax :: Maybe a}
+    deriving (Eq, Show)
 
-instance (Eq a) => Monoid (Max a) where
-    mempty                  = undefined
-    mappend (Max a) (Max b) = undefined
+instance (Eq a, Monoid a) => Monoid (Max a) where
+    mempty                                     = Max $ Nothing
+    --mappend (Max (Just a)) (Max (Just mempty)) = Max $ Nothing
+    --mappend (Max (Just mempty)) (Max (Just a)) = Max $ Nothing
+    mappend (Max (Just a)) (Max (Just b))      = Max $ Just $ a `mappend` b 
+
+newtype Max1 a = Max1 {getMax1 :: a}
+    deriving (Show)
+
+instance (Eq a) => Monoid (Max1 a) where
+    mempty = undefined
+    mappend = undefined
 
 --Test
---test21 = foldMap (Max . Just) []
---test22 = foldMap (Max . Just) ["foo", "bar", "baz"]
---test23 = foldMap (Max . Just) (Node 6 [Node 42 [], Node 7 [] ])
---test24 = foldMap (Max . Just) (Node [] [])
+--test21 = DF.foldMap (Max . Just) []
+--test22 = DF.foldMap (Max . Just) ["foo", "bar", "baz"]
+--test23 = DF.foldMap (Max . Just) (Node 6 [Node 42 [], Node 7 [] ])
+--test24 = DF.foldMap (Max . Just) (Node [] [])
 
--- Pregunta 3
+-------------------Pregunta 3----------------------------------------
 data Filesystem a = File a | Directory a [Filesystem a]
     deriving (Eq, Show)
 
