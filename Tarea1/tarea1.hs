@@ -97,13 +97,13 @@ type Zipper a = (Filesystem a, Breadcrumbs a)
 
 -----------------------------------------------------------
 goDown   :: Zipper a -> Maybe (Zipper a)
-goDown (Directory z (Directory v xs : ys), [] ) = Just $ (Directory v xs, 
-                                                           (Parent v [] []) :
+goDown (Directory z (Directory v xs:ys), [] ) = Just $ (Directory v xs, 
+                                                           (Parent v [] []):
                                                            [Parent z [] ys])
-goDown (Directory z (Directory v ys : qs), 
+goDown (Directory z (Directory v ys:qs), 
        ((Parent k b bs) : xs))              = Just $ (Directory v ys,
-                                                      (Parent v [] []) :
-                                                      ((Parent k b qs) : xs))
+                                                      (Parent v [] []):
+                                                      ((Parent k b qs):xs))
 goDown _                                    = Nothing
 
 goRight  :: Zipper a -> Maybe (Zipper a)
@@ -121,11 +121,17 @@ goLeft (Directory z ys,
 goLeft _                            = Nothing
 
 goBack   :: Zipper a -> Maybe (Zipper a)
-goBack = undefined
+goBack (Directory z ys, (Parent _ [] []):(Parent b xs cs):ls) = 
+            Just $ (Directory b ((Directory z ys):cs), (Parent b xs []):ls)
+goBack (Directory z ys, (Parent q (x:xs) []):(Parent b ks cs):ls ) = 
+            goBack $ (Directory z (x:ys), (Parent q xs []):(Parent b ks cs):ls)
+goBack _ = Nothing
 
 tothetop :: Zipper a -> Maybe (Zipper a)
-tothetop (f , []) = Just $ (f, [])
-tothetop f        = tothetop $ fromJust $ goBack f
+tothetop (f , xs@[Parent q [] []])  = Just $ (f, xs)
+tothetop (Directory z ys , [Parent q (x:xs) []]) = 
+            tothetop $ (Directory z (x:ys), [Parent q xs []])
+tothetop f                          = tothetop $ fromJust $ goBack f
 
 modify   :: (a -> a) -> Zipper a -> Maybe (Zipper a)
 modify f (File a, bs)         = Just (File (f a), bs)
