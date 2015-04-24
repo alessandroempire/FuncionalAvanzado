@@ -51,7 +51,7 @@ gd :: Double -> Hypothesis Double -> [Sample Double]
 gd alpha h ss = undefined
 
 --Pregunta2----------------------------------------------------------
-newtype Max a = Max {getMax :: Maybe a}
+newtype Max a = Max {getMax :: a}
     deriving (Eq, Show)
 
 instance (Eq a, Monoid a) => Monoid (Max a) where
