@@ -36,7 +36,8 @@ addOnes = map g
     where g k = Sample { x = 1.0:(x k), y = y k}
 
 theta :: Hypothesis Double -> Sample Double -> Double
-theta h s = undefined
+theta h s = foldl' (+) 0 $ map g $ zip (c h) (x s)
+    where g y = fst y * snd y
 
 --test :: [a] -> 
 test xs ys = foldl' g 0 xs
