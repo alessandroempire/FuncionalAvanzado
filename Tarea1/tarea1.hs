@@ -32,9 +32,12 @@ veryClose :: Double -> Double -> Bool
 veryClose v0 v1 = abs (v0 - v1) <= epsilon
 
 addOnes :: [Sample Double] -> [Sample Double]
-addOnes =  (:) =<< (f . g)
-    where g    = (1 <$) . x . head
-          f xs = Sample {x = xs, y = 1.0}
+--addOnes xs = map (\z -> Sample {x = x z, y = y z}) xs
+addOnes map g xs 
+    where g Sample {x, y} = Sample { x = (1 <$) . (x sp) , y = y sp }
+--addOnes =  (:) =<< (f . g)
+--    where g    = (1 <$) . x . head
+--          f xs = Sample {x = xs, y = 1.0}
 
 theta :: Hypothesis Double -> Sample Double -> Double
 theta h s = undefined
