@@ -39,10 +39,6 @@ theta :: Hypothesis Double -> Sample Double -> Double
 theta h s = foldl' (+) 0 $ map g $ zip (c h) (x s)
     where g y = fst y * snd y
 
---test :: [a] -> 
-test xs ys = foldl' g 0 xs
-    where g acc x = foldl' (+) x ys 
-
 cost :: Hypothesis Double -> [Sample Double] -> Double
 cost h ss = undefined
 
