@@ -36,11 +36,18 @@ addOnes = map g
     where g k = Sample { x = 1.0:(x k), y = y k}
 
 theta :: Hypothesis Double -> Sample Double -> Double
-theta h s = foldl' (+) 0 $ map g $ zip (c h) (x s)
-    where g y = fst y * snd y
+theta h s = foldl' (+) 0 $ zipWith (*) (c h) (x s)
 
 cost :: Hypothesis Double -> [Sample Double] -> Double
-cost h ss = undefined
+cost h ss = f $ foldl' g (0, 0.0) ss
+    where g (m, sum) z = (m+1, sum + ((theta h z) - (y z))^2 )
+          f (a, b)     = b / (2*a)
+
+test1 = Hypothesis {c=[1.0, 2.0, 3.0]}
+test2 = [ Sample {x=[4.0, 5.0, 6.0], y = 1},
+          Sample {x=[1.0, 2.0, 3.0], y = 2},
+          Sample {x=[2.0, 3.0, 4.0], y = 3}
+        ]
 
 descend :: Double -> Hypothesis Double -> [Sample Double]
                   -> Hypothesis Double
@@ -51,21 +58,14 @@ gd :: Double -> Hypothesis Double -> [Sample Double]
 gd alpha h ss = undefined
 
 --Pregunta2----------------------------------------------------------
-newtype Max a = Max {getMax :: a}
-    deriving (Eq, Show)
+newtype Max a = Max {getMax :: Maybe a}
+    deriving (Eq, Ord, Show)
 
-instance (Eq a, Monoid a) => Monoid (Max a) where
-    mempty                                     = Max $ Nothing
-    --mappend (Max (Just a)) (Max (Just mempty)) = Max $ Nothing
-    --mappend (Max (Just mempty)) (Max (Just a)) = Max $ Nothing
-    mappend (Max (Just a)) (Max (Just b))      = Max $ Just $ a `mappend` b 
-
-newtype Max1 a = Max1 {getMax1 :: a}
-    deriving (Show)
-
-instance (Eq a) => Monoid (Max1 a) where
-    mempty = undefined
-    mappend = undefined
+instance (Eq a, Ord a, Monoid a) => Monoid (Max a) where
+    mempty                                = Max Nothing
+    mappend (Max (Just a)) (Max Nothing)  = Max $ Just a 
+    mappend (Max Nothing) (Max (Just a))  = Max $ Just a
+    mappend (Max (Just a)) (Max (Just b)) = Max $ Just $ max a b
 
 --Test
 --test21 = DF.foldMap (Max . Just) []
@@ -92,7 +92,6 @@ testFilesystem =
                  Directory 5 [ File 6 ]
                 ]
 
------------------------------------------------------------
 data Crumb a = Parent a [Filesystem a] [Filesystem a]
     deriving (Eq, Show)
 
@@ -100,7 +99,6 @@ type Breadcrumbs a = [Crumb a]
 
 type Zipper a = (Filesystem a, Breadcrumbs a)
 
------------------------------------------------------------
 goDown   :: Zipper a -> Maybe (Zipper a)
 goDown (Directory z (Directory v xs:ys), [] ) = Just $ (Directory v xs, 
                                                            (Parent v [] []):
