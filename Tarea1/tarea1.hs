@@ -33,7 +33,7 @@ veryClose v0 v1 = abs (v0 - v1) <= epsilon
 
 addOnes :: [Sample Double] -> [Sample Double]
 addOnes = map g
-    where g k = Sample { x = 1.0:(x k), y = y k}
+    where g k = k { x = 1.0:(x k)}
 
 theta :: Hypothesis Double -> Sample Double -> Double
 theta h s = foldl' (+) 0 $ zipWith (*) (c h) (x s)
