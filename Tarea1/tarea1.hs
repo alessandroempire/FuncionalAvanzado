@@ -49,13 +49,23 @@ test2 = [ Sample {x=[4.0, 5.0, 6.0], y = 1},
           Sample {x=[2.0, 3.0, 4.0], y = 3}
         ]
 
-descend :: Double -> Hypothesis Double -> [Sample Double]
-                  -> Hypothesis Double
-descend alpha h ss = undefined
+descend :: Double -> Hypothesis Double -> [Sample Double] -> Hypothesis Double
+descend alpha h ss = g3 $ foldl' g ([], 0) (c h) 
+    where g (hy, pos) x    = ((x - (g2(foldl' g1 (0, 0.0, pos) ss))):hy, pos+1)
+          g1 (m, sum, p) z = (m+1, sum + ((theta h z) - (y z)) * ((x z)!!p), p)
+          g2 (a, b, _)     = (b * alpha) / a
+          g3 (res, _)      = Hypothesis { c = reverse res }
 
 gd :: Double -> Hypothesis Double -> [Sample Double]
-             -> [(Integer,Hypothesis Double,Double)]
-gd alpha h ss = undefined
+             -> [(Integer, Hypothesis Double, Double)]
+gd alpha h ss = unfoldr g (0, h, (cost h ss))
+    where g (x, y, z) = let newHy  = descend alpha y ss
+                            price  = cost y ss 
+                        in 
+                           if veryClose price (cost newHy ss)
+                           then Nothing
+                           else Just ((x, y, (cost y ss)), 
+                                      (x+1, (descend alpha y ss), (cost y ss)))
 
 --Pregunta2----------------------------------------------------------
 newtype Max a = Max {getMax :: Maybe a}
