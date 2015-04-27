@@ -76,6 +76,7 @@ Para el desarrollo de la solución, serán necesarios los módulos
 gráfico que muestra la convergencia.}
 
 \begin{lstlisting}
+
 > import Data.Maybe
 > import Data.List
 > import Data.Functor
@@ -83,7 +84,8 @@ gráfico que muestra la convergencia.}
 > import Data.Foldable (foldMap)
 > import Data.Tree
 > import Graphics.Rendering.Chart.Easy
-> import Graphics.Rendering.Chart.Backend.Cairo
+> import Graphics.Rendering.Chart.Backend
+
 \end{lstlisting}
 
 Las técnicas de \emph{Machine Learning} operan sobre conjuntos
@@ -104,8 +106,10 @@ allá de que todos son del mismo tamaño.
 Así, definiremos el tipo polimórfico
 
 \begin{lstlisting}
+
 > data Sample a = Sample { x :: [a], y :: a }
 >      deriving (Show)
+
 \end{lstlisting}
 
 \newpage
@@ -119,8 +123,10 @@ para toda la colección de muestras.
 
 
 \begin{lstlisting}
+
 > data Hypothesis a = Hypothesis { c :: [a] }
 >      deriving (Show)
+
 \end{lstlisting}
 
 En el caso general, asegurar la convergencia del algoritmo en un
@@ -129,8 +135,10 @@ detalles, es necesario un coeficiente $\alpha$ que regule
 cuán rápido se desciende por el gradiente
 
 \begin{lstlisting}
+
 > alpha :: Double
 > alpha = 0.03
+
 \end{lstlisting}
 
 También hace falta determinar si el algoritmo dejó de progresar,
@@ -138,8 +146,10 @@ para lo cual definiremos un márgen de convergencia $\epsilon$
 muy pequeño
 
 \begin{lstlisting}
+
 > epsilon :: Double
 > epsilon = 0.0000001
+
 \end{lstlisting}
 
 Finalmente, el algoritmo necesita una hipótesis inicial, a partir
@@ -148,8 +158,10 @@ el mínimo, con la esperanza que sea un mínimo global. Para nuestro
 ejercicio, utilizaremos
 
 \begin{lstlisting}
+
 > guess :: Hypothesis Double
 > guess = Hypothesis { c = [0.0, 0.0, 0.0] }
+
 \end{lstlisting}
 
 \subsection{Muestras de Entrenamiento}
@@ -157,60 +169,64 @@ ejercicio, utilizaremos
 En este archivo se incluye la definición
 
 \begin{lstlisting}
+
 > training :: [Sample Double]
+
 \end{lstlisting}
 
 \ignore{
-\begin{code}
-training = [
-  Sample { x = [  0.1300098690745405, -0.2236751871685913 ], y = 399900 },
-  Sample { x = [ -0.5041898382231769, -0.2236751871685913 ], y = 329900 },
-  Sample { x = [  0.502476363836692, -0.2236751871685913 ], y = 369000 },
-  Sample { x = [ -0.7357230646969468, -1.537766911784067 ], y = 232000 },
-  Sample { x = [  1.257476015381594, 1.090416537446884 ], y = 539900 },
-  Sample { x = [ -0.01973172848186497, 1.090416537446884 ], y = 299900 },
-  Sample { x = [ -0.5872397998931161, -0.2236751871685913 ], y = 314900 },
-  Sample { x = [ -0.7218814044186236, -0.2236751871685913 ], y = 198999 },
-  Sample { x = [ -0.7810230437896409, -0.2236751871685913 ], y = 212000 },
-  Sample { x = [ -0.6375731099961096, -0.2236751871685913 ], y = 242500 },
-  Sample { x = [ -0.07635670234773261, 1.090416537446884 ], y = 239999 },
-  Sample { x = [ -0.0008567371932424295, -0.2236751871685913 ], y = 347000 },
-  Sample { x = [ -0.1392733399764744, -0.2236751871685913 ], y = 329999 },
-  Sample { x = [  3.117291823687202,   2.40450826206236 ], y = 699900 },
-  Sample { x = [ -0.9219563120780225, -0.2236751871685913 ], y = 259900 },
-  Sample { x = [  0.3766430885792084,  1.090416537446884 ], y = 449900 },
-  Sample { x = [ -0.856523008944131,  -1.537766911784067 ], y = 299900 },
-  Sample { x = [ -0.9622229601604173, -0.2236751871685913 ], y = 199900 },
-  Sample { x = [  0.7654679091248329,  1.090416537446884 ], y = 499998 },
-  Sample { x = [  1.296484330711414,   1.090416537446884 ], y = 599000 },
-  Sample { x = [ -0.2940482685431793, -0.2236751871685913 ], y = 252900 },
-  Sample { x = [ -0.1417900054816241, -1.537766911784067 ], y = 255000 },
-  Sample { x = [ -0.4991565072128776, -0.2236751871685913 ], y = 242900 },
-  Sample { x = [ -0.04867338179108621, 1.090416537446884 ], y = 259900 },
-  Sample { x = [  2.377392165173198,  -0.2236751871685913 ], y = 573900 },
-  Sample { x = [ -1.133356214510595,  -0.2236751871685913 ], y = 249900 },
-  Sample { x = [ -0.6828730890888036, -0.2236751871685913 ], y = 464500 },
-  Sample { x = [  0.6610262906611214, -0.2236751871685913 ], y = 469000 },
-  Sample { x = [  0.2508098133217248, -0.2236751871685913 ], y = 475000 },
-  Sample { x = [  0.8007012261969283, -0.2236751871685913 ], y = 299900 },
-  Sample { x = [ -0.2034483103577911, -1.537766911784067 ], y = 349900 },
-  Sample { x = [ -1.259189489768079,  -2.851858636399542 ], y = 169900 },
-  Sample { x = [  0.04947657290975102, 1.090416537446884 ], y = 314900 },
-  Sample { x = [  1.429867602484346,  -0.2236751871685913 ], y = 579900 },
-  Sample { x = [ -0.2386816274298865,  1.090416537446884 ], y = 285900 },
-  Sample { x = [ -0.7092980768928753, -0.2236751871685913 ], y = 249900 },
-  Sample { x = [ -0.9584479619026928, -0.2236751871685913 ], y = 229900 },
-  Sample { x = [  0.1652431861466359,  1.090416537446884 ], y = 345000 },
-  Sample { x = [  2.78635030976002,    1.090416537446884 ], y = 549000 },
-  Sample { x = [  0.202993168723881,   1.090416537446884 ], y = 287000 },
-  Sample { x = [ -0.4236565420583874, -1.537766911784067 ], y = 368500 },
-  Sample { x = [  0.2986264579195686, -0.2236751871685913 ], y = 329900 },
-  Sample { x = [  0.7126179335166897,  1.090416537446884 ], y = 314000 },
-  Sample { x = [ -1.007522939253111,  -0.2236751871685913 ], y = 299000 },
-  Sample { x = [ -1.445422737149154,  -1.537766911784067 ], y = 179900 },
-  Sample { x = [ -0.1870899845743182,  1.090416537446884 ], y = 299900 },
-  Sample { x = [ -1.003747940995387,  -0.2236751871685913 ], y = 239500 } ]
-\end{code}
+\begin{lstlisting}
+
+> training = [
+>  Sample { x = [  0.1300098690745405, -0.2236751871685913 ], y = 399900 },
+>  Sample { x = [ -0.5041898382231769, -0.2236751871685913 ], y = 329900 },
+>  Sample { x = [  0.502476363836692, -0.2236751871685913 ], y = 369000 },
+>  Sample { x = [ -0.7357230646969468, -1.537766911784067 ], y = 232000 },
+>  Sample { x = [  1.257476015381594, 1.090416537446884 ], y = 539900 },
+>  Sample { x = [ -0.01973172848186497, 1.090416537446884 ], y = 299900 },
+>  Sample { x = [ -0.5872397998931161, -0.2236751871685913 ], y = 314900 },
+>  Sample { x = [ -0.7218814044186236, -0.2236751871685913 ], y = 198999 },
+>  Sample { x = [ -0.7810230437896409, -0.2236751871685913 ], y = 212000 },
+>  Sample { x = [ -0.6375731099961096, -0.2236751871685913 ], y = 242500 },
+>  Sample { x = [ -0.07635670234773261, 1.090416537446884 ], y = 239999 },
+>  Sample { x = [ -0.0008567371932424295, -0.2236751871685913 ], y = 347000 },
+>  Sample { x = [ -0.1392733399764744, -0.2236751871685913 ], y = 329999 },
+>  Sample { x = [  3.117291823687202,   2.40450826206236 ], y = 699900 },
+>  Sample { x = [ -0.9219563120780225, -0.2236751871685913 ], y = 259900 },
+>  Sample { x = [  0.3766430885792084,  1.090416537446884 ], y = 449900 },
+>  Sample { x = [ -0.856523008944131,  -1.537766911784067 ], y = 299900 },
+>  Sample { x = [ -0.9622229601604173, -0.2236751871685913 ], y = 199900 },
+>  Sample { x = [  0.7654679091248329,  1.090416537446884 ], y = 499998 },
+>  Sample { x = [  1.296484330711414,   1.090416537446884 ], y = 599000 },
+>  Sample { x = [ -0.2940482685431793, -0.2236751871685913 ], y = 252900 },
+>  Sample { x = [ -0.1417900054816241, -1.537766911784067 ], y = 255000 },
+>  Sample { x = [ -0.4991565072128776, -0.2236751871685913 ], y = 242900 },
+>  Sample { x = [ -0.04867338179108621, 1.090416537446884 ], y = 259900 },
+>  Sample { x = [  2.377392165173198,  -0.2236751871685913 ], y = 573900 },
+>  Sample { x = [ -1.133356214510595,  -0.2236751871685913 ], y = 249900 },
+>  Sample { x = [ -0.6828730890888036, -0.2236751871685913 ], y = 464500 },
+>  Sample { x = [  0.6610262906611214, -0.2236751871685913 ], y = 469000 },
+>  Sample { x = [  0.2508098133217248, -0.2236751871685913 ], y = 475000 },
+>  Sample { x = [  0.8007012261969283, -0.2236751871685913 ], y = 299900 },
+>  Sample { x = [ -0.2034483103577911, -1.537766911784067 ], y = 349900 },
+>  Sample { x = [ -1.259189489768079,  -2.851858636399542 ], y = 169900 },
+>  Sample { x = [  0.04947657290975102, 1.090416537446884 ], y = 314900 },
+>  Sample { x = [  1.429867602484346,  -0.2236751871685913 ], y = 579900 },
+>  Sample { x = [ -0.2386816274298865,  1.090416537446884 ], y = 285900 },
+>  Sample { x = [ -0.7092980768928753, -0.2236751871685913 ], y = 249900 },
+>  Sample { x = [ -0.9584479619026928, -0.2236751871685913 ], y = 229900 },
+>  Sample { x = [  0.1652431861466359,  1.090416537446884 ], y = 345000 },
+>  Sample { x = [  2.78635030976002,    1.090416537446884 ], y = 549000 },
+>  Sample { x = [  0.202993168723881,   1.090416537446884 ], y = 287000 },
+>  Sample { x = [ -0.4236565420583874, -1.537766911784067 ], y = 368500 },
+>  Sample { x = [  0.2986264579195686, -0.2236751871685913 ], y = 329900 },
+>  Sample { x = [  0.7126179335166897,  1.090416537446884 ], y = 314000 },
+>  Sample { x = [ -1.007522939253111,  -0.2236751871685913 ], y = 299000 },
+>  Sample { x = [ -1.445422737149154,  -1.537766911784067 ], y = 179900 },
+>  Sample { x = [ -0.1870899845743182,  1.090416537446884 ], y = 299900 },
+>  Sample { x = [ -1.003747940995387,  -0.2236751871685913 ], y = 239500 } ]
+
+\end{lstlisting}
 }
 
 que cuenta con 47 muestras de entrenamiento listas para usar.
@@ -230,8 +246,10 @@ si la diferencia entre dos números en punto flotante es
 $\epsilon-$despreciable
 
 \begin{lstlisting}
+
 > veryClose :: Double -> Double -> Bool
-> veryClose v0 v1 = undefined
+> veryClose v0 v1 = abs (v0 - v1) <= epsilon
+
 \end{lstlisting}
 
 Por favor \textbf{no} use un \texttt{if}\ldots
@@ -245,8 +263,11 @@ constante para la interpolación lineal. En consecuencia \emph{todas}
 las muestras necesitan incorporar $x_0 = 1$.
 
 \begin{lstlisting}
+
 > addOnes :: [Sample Double] -> [Sample Double]
-> addOnes = undefined
+> addOnes = map g
+>    where g k = k { x = 1.0:(x k)}
+
 \end{lstlisting}
 
 Escriba la función \texttt{addOnes} usando exclusivamente funciones
@@ -261,8 +282,10 @@ $h_\theta(X) = \theta^TX$ calculando el producto punto
 de ambos vectores
 
 \begin{lstlisting}
-> theta h s :: Hypothesis Double -> Sample Double -> Double
-> theta h s = undefined
+
+> theta :: Hypothesis Double -> Sample Double -> Double
+> theta h s = foldl' (+) 0 $ zipWith (*) (c h) (x s)
+
 \end{lstlisting}
 
 Escriba la función \texttt{theta} usando exclusivamente funciones
@@ -279,8 +302,12 @@ fórmula concreta para $m$ muestras es
 $$ J(\theta) = \frac{1}{2m} \sum_{i=1}^{m}{(h_\theta(x^{(i)}) - y^{(i)})^2} $$
 
 \begin{lstlisting}
+
 > cost :: Hypothesis Double -> [Sample Double] -> Double
-> cost h ss = undefined
+> cost h ss = f $ foldl' g (0, 0.0) ss
+>    where g (m, sum) z = (m+1, sum + ((theta h z) - (y z))^2 )
+>          f (a, b)     = b / (2*a)
+
 \end{lstlisting}
 
 Su función debe ser escrita como un \emph{fold} que realice todos
@@ -309,10 +336,24 @@ y un conjunto de entrenamiento, debe producir una nueva hipótesis
 mejorada según el coeficiente de aprendizaje.
 
 \begin{lstlisting}
+
 > descend :: Double -> Hypothesis Double -> [Sample Double]
 >         -> Hypothesis Double
-> descend alpha h ss = undefined
+> descend alpha h ss = g3 $ foldl' g ([], 0) (c h) 
+>    where g (hy, pos) x    = ((x - (g2(foldl' g1 (0, 0.0, pos) ss))):hy, pos+1)
+>          g1 (m, sum, p) z = (m+1, sum + ((theta h z) - (y z)) * ((x z)!!p), p)
+>          g2 (a, b, _)     = (b * alpha) / a
+>          g3 (res, _)      = Hypothesis { c = reverse res }
+
 \end{lstlisting}
+
+Explicacion:
+Se usaron dos fold: 
+a) El primer foldl' para recorrer el vector de la hipotesis e 
+ir contando la posicion que se requiere en la formula. 
+A trave de este fold se va armando la nueva hipotesis. 
+b) El segundo fold para calcular la sumatoria indicada en la
+formula.
 
 Sea $\theta_j$ el $j-$ésimo componente del vector $\theta$
 correspondiente a la hipótesis actual que pretendemos mejorar. La
@@ -336,9 +377,18 @@ de elementos tales que permitan determinar, para cada iteración,
 cuál es la hipótesis mejorada y el costo de la misma.
 
 \begin{lstlisting}
+
 > gd :: Double -> Hypothesis Double -> [Sample Double]
 >    -> [(Integer,Hypothesis Double,Double)]
-> gd alpha h ss = undefined
+> gd alpha h ss = unfoldr g (0, h, (cost h ss))
+>    where g (x, y, z) = let newHy  = descend alpha y ss
+>                            price  = cost y ss 
+>                        in 
+>                           if veryClose price (cost newHy ss)
+>                           then Nothing
+>                           else Just ((x, y, (cost y ss)), 
+>                                      (x+1, (descend alpha y ss), (cost y ss)))
+
 \end{lstlisting}
 
 Su función debe ser escrita como un \emph{unfold}. Note que esta
@@ -366,10 +416,12 @@ implantado correctamente, hay convergencia. Para que tenga
 una idea
 
 \begin{lstlisting}
+
   ghci> take 3 (gd alpha guess training)
   [(0,Hypothesis {c = [0.0,0.0,0.0]},6.559154810645744e10),
    (1,Hypothesis {c = [10212.379787234042,3138.9880129854737,...
    (2,Hypothesis {c = [20118.388180851063,6159.113611965675,...]
+
 \end{lstlisting}
 
 y si se deja correr hasta terminar converge (el \emph{unfold}
@@ -377,11 +429,13 @@ y si se deja correr hasta terminar converge (el \emph{unfold}
 deberían ser muy parecidos a (indentación mía)
 
 \begin{lstlisting}
+
   (1072,
   Hypothesis {c = [340412.65957446716,
                    110631.04133702737,
                    -6649.4653290010865]},
   2.043280050602863e9)
+
 \end{lstlisting}
 
 Para su comodidad, he incluido la función \texttt{graph} de la
@@ -390,13 +444,17 @@ sencillos (línea, torta, barra, etc.). Puede usarla para verificar
 que su función está haciendo el trabajo
 
 \begin{lstlisting}
+
   ghci> graph "works" (gd alpha guess training)
+
 \end{lstlisting}
 
 y en el archivo \texttt{works.png} debe obtener una imagen
 similar a
 \begin{center}
+
         \includegraphics[width=11cm]{works.png}
+
 \end{center}
 
 \subsection{¿Aprendió?}
@@ -406,10 +464,12 @@ y úsela para predecir el valor $y$ asociado al vector
 $(-0.44127, -0.22368)$.
 
 \begin{verbatim}
+
   ghci> let (_,h,_) = last (gd alpha guess training)
   ghci> let s = Sample ( x = [1.0, -0.44127,-0.22368], y = undefined }
   ghci> theta h s
   293081.85236
+
 \end{verbatim}
 
 \section{Monoids}
@@ -458,7 +518,10 @@ ghci> foldMap (Max . Just) (Node [] [])
 Considere el tipo de datos
 
 \begin{lstlisting}
+
 > data Filesystem a = File a | Directory a [Filesystem a]
+>       deriving (Eq, Show)
+
 \end{lstlisting}
 
 Diseñe un zipper seguro para el tipo \texttt{Filesystem}
@@ -467,18 +530,77 @@ el foco dentro de la estructura de datos, así como la modificación
 de cualquier posición dentro de la estructura.
 
 \begin{lstlisting}
-> data Breadcrumbs a = undefined
->
+
+> data Crumb a = Parent a [Filesystem a] [Filesystem a]
+>     deriving (Eq, Show)
+> 
+> type Breadcrumbs a = [Crumb a]
+> 
 > type Zipper a = (Filesystem a, Breadcrumbs a)
->
-> goDown   ::
-> goRight  ::
-> goLeft   ::
-> goBack   ::
-> tothetop :: 
-> modify   ::
-> focus    ::
-> defocus  ::
+> 
+> goDown   :: Zipper a -> Maybe (Zipper a)
+> goDown (Directory z (Directory v xs:ys), [] ) = 
+>     Just $ (Directory v xs, (Parent v [] []):[Parent z [] ys])
+> goDown (Directory z (Directory v ys:qs), ((Parent k b bs) : xs)) = 
+>     Just $ (Directory v ys, (Parent v [] []):((Parent k b qs):xs))
+> goDown _ = Nothing
+> 
+> goRight  :: Zipper a -> Maybe (Zipper a)
+> goRight (Directory z (y:ys), []) = 
+>     Just $ (Directory z ys, [Parent z [y] []])
+> goRight (Directory z (y:ys), ((Parent v b bs): xs)) = 
+>     Just $ (Directory z ys, ((Parent z (y:b) bs) : xs))
+> goRight _ = Nothing
+> 
+> goLeft   :: Zipper a -> Maybe (Zipper a)
+> goLeft (Directory z ys, ((Parent v (x:xs) bs) : cs)) = 
+>     Just $ (Directory z (x:ys), ((Parent v xs bs) : cs))
+> goLeft _ = Nothing
+> 
+> goBack   :: Zipper a -> Maybe (Zipper a)
+> goBack (Directory z ys, (Parent _ [] []):(Parent b xs cs):ls) = 
+>             Just $ (Directory b ((Directory z ys):cs), (Parent b xs []):ls)
+> goBack (Directory z ys, (Parent q (x:xs) []):(Parent b ks cs):ls ) = 
+>             goBack $ (Directory z (x:ys), (Parent q xs []):(Parent b ks cs):ls)
+> goBack _ = Nothing
+> 
+> tothetop :: Zipper a -> Maybe (Zipper a)
+> tothetop (f , xs@[Parent q [] []]) = Just $ (f, xs)
+> tothetop (Directory z ys , [Parent q (x:xs) []]) = 
+>              tothetop $ (Directory z (x:ys), [Parent q xs []])
+> tothetop f = tothetop $ fromJust $ goBack f
+> 
+> modify   :: (a -> a) -> Zipper a -> Maybe (Zipper a)
+> modify f (File a, bs)         = Just (File (f a), bs)
+> modify f (Directory a xs, bs) = Just (Directory (f a) xs, bs)
+> 
+> focus    :: Filesystem a -> Zipper a
+> focus f = (f, [])
+> 
+> defocus  :: Zipper a -> Filesystem a
+> defocus (f, _) = f
+
+\end{lstlisting}
+
+Un Filesystema de prueba de prueba:
+
+\being{lstlisting}
+
+> testFilesystem :: Filesystem Int
+> testFilesystem = 
+>     Directory 1 [
+>                  Directory 11 [
+>                                 Directory 12 [File 14],
+>                                 Directory 13 [File 15]
+>                               ],
+>                  File 2,
+>                  Directory 3 [ File 31,
+>                                Directory 34 [],
+>                                File 35
+>                              ],
+>                  Directory 5 [ File 6 ]
+>                 ]
+
 \end{lstlisting}
 
 \end{document}

@@ -110,28 +110,23 @@ type Breadcrumbs a = [Crumb a]
 type Zipper a = (Filesystem a, Breadcrumbs a)
 
 goDown   :: Zipper a -> Maybe (Zipper a)
-goDown (Directory z (Directory v xs:ys), [] ) = Just $ (Directory v xs, 
-                                                           (Parent v [] []):
-                                                           [Parent z [] ys])
-goDown (Directory z (Directory v ys:qs), 
-       ((Parent k b bs) : xs))              = Just $ (Directory v ys,
-                                                      (Parent v [] []):
-                                                      ((Parent k b qs):xs))
-goDown _                                    = Nothing
+goDown (Directory z (Directory v xs:ys), [] ) = 
+    Just $ (Directory v xs, (Parent v [] []):[Parent z [] ys])
+goDown (Directory z (Directory v ys:qs), ((Parent k b bs) : xs)) = 
+    Just $ (Directory v ys, (Parent v [] []):((Parent k b qs):xs))
+goDown _ = Nothing
 
 goRight  :: Zipper a -> Maybe (Zipper a)
-goRight (Directory z (y:ys), []) = Just $ (Directory z ys, 
-                                          [Parent z [y] []])
-goRight (Directory z (y:ys), 
-        ((Parent v b bs): xs))   = Just $ (Directory z ys, 
-                                            ((Parent z (y:b) bs) : xs))
-goRight _                        = Nothing
+goRight (Directory z (y:ys), []) = 
+    Just $ (Directory z ys, [Parent z [y] []])
+goRight (Directory z (y:ys), ((Parent v b bs): xs)) = 
+    Just $ (Directory z ys, ((Parent z (y:b) bs) : xs))
+goRight _ = Nothing
 
 goLeft   :: Zipper a -> Maybe (Zipper a)
-goLeft (Directory z ys, 
-       ((Parent v (x:xs) bs) : cs)) = Just $ (Directory z (x:ys),
-                                            ((Parent v xs bs) : cs))
-goLeft _                            = Nothing
+goLeft (Directory z ys, ((Parent v (x:xs) bs) : cs)) = 
+    Just $ (Directory z (x:ys), ((Parent v xs bs) : cs))
+goLeft _ = Nothing
 
 goBack   :: Zipper a -> Maybe (Zipper a)
 goBack (Directory z ys, (Parent _ [] []):(Parent b xs cs):ls) = 
