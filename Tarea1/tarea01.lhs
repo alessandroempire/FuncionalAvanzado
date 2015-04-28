@@ -347,12 +347,12 @@ mejorada según el coeficiente de aprendizaje.
 
 \end{lstlisting}
 
-Explicacion:
+Explicacion de la funcion descend:
 Se usaron dos fold: 
 a) El primer foldl' para recorrer el vector de la hipotesis e 
 ir contando la posicion que se requiere en la formula. 
 A trave de este fold se va armando la nueva hipotesis. 
-b) El segundo fold para calcular la sumatoria indicada en la
+b) El segundo foldl' para calcular la sumatoria indicada en la
 formula.
 
 Sea $\theta_j$ el $j-$ésimo componente del vector $\theta$
@@ -379,8 +379,12 @@ cuál es la hipótesis mejorada y el costo de la misma.
 \begin{lstlisting}
 
 > gd :: Double -> Hypothesis Double -> [Sample Double]
->    -> [(Integer,Hypothesis Double,Double)]
-> gd alpha h ss = unfoldr g (0, h, (cost h ss))
+>              -> [(Integer, Hypothesis Double, Double)]
+> gd alpha h ss = gd' alpha h (addOnes ss)
+>
+> gd' :: Double -> Hypothesis Double -> [Sample Double]
+>               -> [(Integer,Hypothesis Double,Double)]
+> gd' alpha h ss = unfoldr g (0, h, (cost h ss))
 >    where g (x, y, z) = let newHy  = descend alpha y ss
 >                            price  = cost y ss 
 >                        in 

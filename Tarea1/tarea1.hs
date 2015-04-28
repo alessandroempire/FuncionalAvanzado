@@ -58,14 +58,18 @@ descend alpha h ss = g3 $ foldl' g ([], 0) (c h)
 
 gd :: Double -> Hypothesis Double -> [Sample Double]
              -> [(Integer, Hypothesis Double, Double)]
-gd alpha h ss = unfoldr g (0, h, (cost h ss))
-    where g (x, y, z) = let newHy  = descend alpha y ss
-                            price  = cost y ss 
-                        in 
-                           if veryClose price (cost newHy ss)
-                           then Nothing
-                           else Just ((x, y, (cost y ss)), 
-                                      (x+1, (descend alpha y ss), (cost y ss)))
+gd alpha h ss = gd' alpha h (addOnes ss)
+
+gd' :: Double -> Hypothesis Double -> [Sample Double]
+              -> [(Integer,Hypothesis Double,Double)]
+gd' alpha h ss = unfoldr g (0, h, (cost h ss))
+   where g (x, y, z) = let newHy  = descend alpha y ss
+                           price  = cost y ss 
+                       in 
+                          if veryClose price (cost newHy ss)
+                          then Nothing
+                          else Just ((x, y, (cost y ss)), 
+                                     (x+1, (descend alpha y ss), (cost y ss)))
 
 --Pregunta2----------------------------------------------------------
 newtype Max a = Max {getMax :: Maybe a}
