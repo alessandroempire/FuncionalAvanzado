@@ -75,11 +75,9 @@ gd' alpha h ss = unfoldr g (0, h, (cost h ss))
 newtype Max a = Max {getMax :: Maybe a}
     deriving (Eq, Ord, Show)
 
-instance (Eq a, Ord a, Monoid a) => Monoid (Max a) where
-    mempty                                = Max Nothing
-    mappend (Max (Just a)) (Max Nothing)  = Max $ Just a 
-    mappend (Max Nothing) (Max (Just a))  = Max $ Just a
-    mappend (Max (Just a)) (Max (Just b)) = Max $ Just $ max a b
+instance (Eq a, Ord a) => Monoid (Max a) where
+    mempty                  = Max Nothing
+    mappend (Max a) (Max b) = Max $ max a b
 
 --Test
 --test21 = DF.foldMap (Max . Just) []
