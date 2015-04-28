@@ -586,8 +586,8 @@ de cualquier posición dentro de la estructura.
 
 \end{lstlisting}
 
+\ignore{
 Un Filesystema de prueba de prueba:
-
 \being{lstlisting}
 
 > testFilesystem :: Filesystem Int
@@ -606,5 +606,6 @@ Un Filesystema de prueba de prueba:
 >                 ]
 
 \end{lstlisting}
+}
 
 \end{document}

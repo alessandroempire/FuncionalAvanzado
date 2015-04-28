@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2015.4.28)  28 APR 2015 12:27
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2015.4.28)  28 APR 2015 14:09
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -911,8 +911,10 @@ File: lstlang1.sty 2013/08/26 1.5b listings language file
 )
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang2.sty
 File: lstlang2.sty 2013/08/26 1.5b listings language file
+) (./tarea01.aux
+LaTeX Info: Redefining \. on input line 23.
+LaTeX Info: Redefining \% on input line 23.
 )
-No file tarea01.aux.
 \openout1 = `tarea01.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 46.
@@ -978,12 +980,13 @@ Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 46.
 LaTeX Info: Redefining \pageref on input line 46.
 LaTeX Info: Redefining \nameref on input line 46.
+
+(./tarea01.out) (./tarea01.out)
 \@outlinefile=\write4
 \openout4 = `tarea01.out'.
 
 LaTeX Font Info:    Try loading font information for OT1+lmr on input line 57.
-
-(/usr/share/texmf/tex/latex/lm/ot1lmr.fd
+ (/usr/share/texmf/tex/latex/lm/ot1lmr.fd
 File: ot1lmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Try loading font information for OML+lmm on input line 57.
@@ -1302,7 +1305,7 @@ Package babel Info: Redefining spanish shorthand "!
 (babel)             in language  on input line 413.
 Package babel Info: Redefining spanish shorthand "?
 (babel)             in language  on input line 413.
-[6] <works.png, id=143, 803.0pt x 602.25pt>
+[6] <works.png, id=182, 803.0pt x 602.25pt>
 File: works.png Graphic file (type png)
  <use works.png>
 Package pdftex.def Info: works.png used on input line 460.
@@ -1448,91 +1451,48 @@ Overfull \hbox (87.93347pt too wide) in paragraph at lines 568--569
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-! Undefined control sequence.
-l.591 \being
-            {lstlisting}
-? 
-
-! Undefined control sequence.
-\lstlisting ->\def \lstenv@name 
-                                {lstlisting}\begingroup \lst@setcatcodes \ca...
-l.608 \end{lstlisting}
-                      
-? 
-! Package Listings Error: Extra \endlstlisting.
-
-See the Listings package documentation for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.608 \end{lstlisting}
-                      
-? 
-
-! LaTeX Error: \begin{document} ended by \end{lstlisting}.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.608 \end{lstlisting}
-                      
-? 
-! Extra \endgroup.
-<recently read> \endgroup 
-                          
-l.608 \end{lstlisting}
-                      
-? 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 610.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 611.
 Package babel Info: Redefining spanish shorthand <<
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand >>
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand "=
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand "~
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand "!
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand "?
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand <<
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand >>
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand "=
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand "~
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand "!
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 Package babel Info: Redefining spanish shorthand "?
-(babel)             in language  on input line 610.
+(babel)             in language  on input line 611.
 [10]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 610.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 611.
  (./tarea01.aux
 LaTeX Info: Redefining \. on input line 23.
 LaTeX Info: Redefining \% on input line 23.
 )
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 610.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 610.
-
-
-Package rerunfilecheck Warning: File `tarea01.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `tarea01.out':
-(rerunfilecheck)             Before: <no file>
-(rerunfilecheck)             After:  0E0B2952C6C0F1308EC077B0EDA07FD3;830.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 610.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 611.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 611.
+Package rerunfilecheck Info: File `tarea01.out' has not changed.
+(rerunfilecheck)             Checksum: 0E0B2952C6C0F1308EC077B0EDA07FD3;830.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 611.
  ) 
 Here is how much of TeX's memory you used:
- 19218 strings out of 494966
- 344966 string characters out of 6179559
- 503320 words of memory out of 5000000
- 21880 multiletter control sequences out of 15000+600000
+ 19231 strings out of 494966
+ 345141 string characters out of 6179559
+ 502320 words of memory out of 5000000
+ 21887 multiletter control sequences out of 15000+600000
  61583 words of font info for 54 fonts, out of 8000000 for 9000
  40 hyphenation exceptions out of 8191
  56i,8n,56p,418b,1827s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1550,10 +1510,10 @@ re/texmf/fonts/type1/public/lm/lmr8.pfb></usr/share/texmf/fonts/type1/public/lm
 fonts/type1/public/lm/lmsy10.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy8.
 pfb></usr/share/texmf/fonts/type1/public/lm/lmtk10.pfb></usr/share/texmf/fonts/
 type1/public/lm/lmtt10.pfb></usr/share/texmf/fonts/type1/public/lm/lmtt9.pfb>
-Output written on tarea01.pdf (10 pages, 368124 bytes).
+Output written on tarea01.pdf (10 pages, 368520 bytes).
 PDF statistics:
- 332 PDF objects out of 1000 (max. 8388607)
- 299 compressed objects within 3 object streams
+ 370 PDF objects out of 1000 (max. 8388607)
+ 336 compressed objects within 4 object streams
  172 named destinations out of 1000 (max. 500000)
- 18 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 114 words of extra memory for PDF output out of 10000 (max. 10000000)
 
