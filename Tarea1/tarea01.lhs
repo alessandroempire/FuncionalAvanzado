@@ -522,11 +522,9 @@ ghci> foldMap (Max . Just) (Node [] [])
 > newtype Max a = Max {getMax :: Maybe a}
 >     deriving (Eq, Ord, Show)
 > 
-> instance (Eq a, Ord a, Monoid a) => Monoid (Max a) where
->     mempty                                = Max Nothing
->     mappend (Max (Just a)) (Max Nothing)  = Max $ Just a 
->     mappend (Max Nothing) (Max (Just a))  = Max $ Just a
->     mappend (Max (Just a)) (Max (Just b)) = Max $ Just $ max a b    
+> instance (Eq a, Ord a) => Monoid (Max a) where
+>     mempty                  = Max Nothing
+>     mappend (Max a) (Max b) = Max $ max a b
 
 \end{lstlisting}
 
@@ -601,8 +599,8 @@ de cualquier posición dentro de la estructura.
 
 \end{lstlisting}
 
+\ignore{
 Un Filesystema de prueba de prueba:
-
 \being{lstlisting}
 
 > testFilesystem :: Filesystem Int
@@ -621,5 +619,6 @@ Un Filesystema de prueba de prueba:
 >                 ]
 
 \end{lstlisting}
+}
 
 \end{document}
