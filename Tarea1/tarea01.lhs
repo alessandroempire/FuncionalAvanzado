@@ -517,6 +517,21 @@ Max {getMax = Just 42}
 ghci> foldMap (Max . Just) (Node [] [])
 \end{verbatim}
 
+\begin{lstlisting}
+
+> newtype Max a = Max {getMax :: Maybe a}
+>     deriving (Eq, Ord, Show)
+> 
+> instance (Eq a, Ord a, Monoid a) => Monoid (Max a) where
+>     mempty                                = Max Nothing
+>     mappend (Max (Just a)) (Max Nothing)  = Max $ Just a 
+>     mappend (Max Nothing) (Max (Just a))  = Max $ Just a
+>     mappend (Max (Just a)) (Max (Just b)) = Max $ Just $ max a b    
+
+\end{lstlisting}
+
+
+
 \section{Zippers}
 
 Considere el tipo de datos
