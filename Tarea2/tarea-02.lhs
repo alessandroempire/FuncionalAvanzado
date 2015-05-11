@@ -45,9 +45,9 @@
 
 \title{CI4251 - Programación Funcional Avanzada \\ Tarea 2}
 
-\author{Ernesto Hernández-Novich\\
-86-17791\\
-\href{mailto:emhn@usb.ve}{<emhn@usb.ve>}}
+\author{Alessandro La corte\\
+09-10430\\
+\href{mailto:alessandroempire@gmail.com}{<alessandroempire@gmail.com>}}
 
 \date{Mayo 8, 2015}
 
@@ -191,6 +191,8 @@ arbitraria sea de valores correctos.
 
 > instance Arbitrary NFANode where
 >   arbitrary = undefined
+>
+> fun = sample' (arbitrary :: Gen (Positive Int))
 
 \end{lstlisting}
 
