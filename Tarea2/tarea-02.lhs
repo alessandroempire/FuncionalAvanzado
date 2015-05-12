@@ -41,6 +41,8 @@
    backgroundcolor=\color{lightgrey}
 }
 
+\long\def\ignore#1{}
+
 \begin{document}
 
 \title{CI4251 - Programación Funcional Avanzada \\ Tarea 2}
@@ -191,8 +193,6 @@ arbitraria sea de valores correctos.
 
 > instance Arbitrary NFANode where
 >   arbitrary = undefined
->
-> fun = sample' (arbitrary :: Gen (Positive Int))
 
 \end{lstlisting}
 
@@ -486,11 +486,198 @@ Hay muchas formas de implantar la simulación y las funciones auxiliares,
 sin embargo aplican las recomendaciones que ya hemos discutido en el
 pasado: aprovechar funciones de orden superior y aprovechar funciones
 de las librerías.
+\\
+
+Una vez que su simulación esté operando correctamente, escriba dos
+propiedades QuickCheck y aproveche la instancia \texttt{Arbitrary} para
+comprobar:
+
+\begin{itemize}
+\item
+  Todo $\lambda-$NFA que tenga un estado final en la $\lambda-$clausura
+  de su estado inicial acepta la palabra vacía.
+  \begin{lstlisting}
+
+> prop_acceptsemptyword :: NFA -> Property
+> prop_acceptsemptyword nfa = undefined
+
+  \end{lstlisting}
+\item
+  Cuando un $\lambda-$NFA acepta una palabra de longitud $n$, el camino
+  recorrido tiene longitud $n+1$.
+  \begin{lstlisting}
+
+> prop_acceptancelength :: NFA -> String -> Property
+> prop_acceptancelength nfa w = undefined
+
+  \end{lstlisting}
+\end{itemize}
 
 \newpage
-\section*{Esto es un quieto menol}
+\section*{Otro Beta}
 
 \noindent
-Disponible mañana después que consulte con mi pran de confianza.
+La vida es dura. Todos los días hay que salir a la calle,
+buscando la fuerza para alcanzar otro beta y echar pa'lante.
+
+\begin{lstlisting}
+
+> data Otro a = Otro ((a -> Beta) -> Beta)
+
+\end{lstlisting}
+
+\noindent
+Y se hace más difícil, porque el \texttt{Beta} está en una chamba o en
+hacer llave con un convive, así hasta que te toque el quieto.
+
+\begin{lstlisting}
+
+> data Beta = Chamba (IO Beta)
+>           | Convive Beta Beta
+>           | Quieto
+
+\end{lstlisting}
+
+\noindent
+Se complica ver el \texttt{Beta}, porque \texttt{IO} esconde lo que
+tiene. Hay que inventarse una ahí para tener idea\ldots
+
+\begin{lstlisting}
+
+> instance Show Beta where
+>    show (Chamba x)    = " chamba "
+>    show (Convive x y) = " convive(" ++ show x 
+>                                     ++ "," 
+>                                     ++ show y ++ ") "
+>    show Quieto        = " quieto "
+
+\end{lstlisting}
+
+\noindent
+A veces hay suerte, y uno encuentra algo que hacer. Uno llega
+con fuerza, hace lo que tiene que hacer, y allí sigues buscando
+otro Beta
+\begin{lstlisting}
+
+> hacer :: Otro a -> Beta
+> hacer = undefined
+
+\end{lstlisting}
+
+\noindent
+pero es triste ver cuando simplemente es un quieto. No importa
+si traes fuerza, te quedas quieto.
+
+\begin{lstlisting}
+
+> quieto :: Otro a
+> quieto = undefined
+
+\end{lstlisting}
+
+\noindent
+Pero hay que ser positivo. Hay que pensar que si uno encuentra
+un oficio, uno chambea. Sólo hay que darle a la chamba y de
+allí uno saca fuerza
+
+\begin{lstlisting}
+
+> chambea :: IO a -> Otro a
+> chambea = undefined
+
+\end{lstlisting}
+
+\noindent
+y si el trabajo se complica, lo mejor es encontrar un convive
+para compartir la fuerza, aunque al final quedes tablas
+
+\begin{lstlisting}
+
+> convive :: Otro a -> Otro ()
+> convive = undefined
+
+\end{lstlisting}
+
+\noindent
+Para llegar lejos, es mejor cuadrar con un pana. Cada uno
+busca por su lado, y luego se juntan.
+
+\begin{lstlisting}
+
+> pana :: Otro a -> Otro a -> Otro a
+> pana = undefined
+
+\end{lstlisting}
+
+\noindent
+y así al final, cuando se junten los panas, hacen una vaca
+y se la vacilan
+
+\begin{lstlisting}
+
+> vaca :: [Beta] -> IO ()
+> vaca = undefined
+
+\end{lstlisting}
+
+\noindent
+Me pasaron el dato, que buscar el beta es como un perol, que
+con cada mano que le metes, siempre te hace echar pa'lante. Que
+consulte al chamo de sistemas, pa'que me muestre como hacer. Porque
+a esos peroles con cosas, que paso a paso avanzan, dizque los
+mentan ``Monads''. A mi no me dá el güiro, pero espero que ti
+si, menor.
+
+\begin{lstlisting}
+
+> instance Monad Otro where
+>   return x       = undefined
+>   (Otro f) >>= g = undefined
+
+\end{lstlisting}
+
+\noindent
+\textbf{Nota:} el propósito de este ejercicio es que noten que
+son los \emph{tipos} los que deben describir el comportamiento.
+Hay sólo una manera correcta de escribir todas las funciones aquí
+solicitades, para lo cual lo único necesario es considerar el
+tipo a producir y los tipos de los argumentos. Así mismo, para
+escribir la instancia \texttt{Monad}, sólo es necesario respetar
+las firmas.
+
+\noindent
+Para saber si su código funciona, primero debe compilar todo
+sin errores. Luego, ejecute
+
+\begin{verbatim}
+ghci> quedo cartel
+\end{verbatim}
+
+\noindent
+y el contenido le hará entender si lo logró.
+
+\ignore{
+\begin{lstlisting}
+
+> cartel :: Otro ()
+> cartel = pana (dale (clavo 42)) 
+>               (pana (dale (clavo 69))
+>                     (pana (dale (clavo 17)) 
+>                           (dale (clavo 23) >> chambea (putStrLn ""))))
+> 
+> quedo :: Otro a -> IO ()
+> quedo x = vaca [hacer x]
+> 
+> clavo :: Int -> String
+> clavo 17 = "/nlmce"
+> clavo 23 = "/y./p6"
+> clavo 42 = "htptuc2"
+> clavo 69 = "t:irofr"
+> 
+> dale :: String -> Otro ()
+> dale xs = mapM_ (chambea . putChar) xs
+
+\end{lstlisting}
+}
 
 \end{document}
