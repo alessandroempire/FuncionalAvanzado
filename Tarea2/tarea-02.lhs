@@ -171,7 +171,10 @@ $\lambda-$NFA
 >                Move { from = Node 0, to = Node 0, sym = 'a' },
 >                Move { from = Node 0, to = Node 1, sym = 'a' },
 >                Move { from = Node 1, to = Node 2, sym = 'b' },
->                Move { from = Node 2, to = Node 3, sym = 'b' }
+>                Move { from = Node 2, to = Node 3, sym = 'b' },
+>              Lambda { from = Node 0, to = Node 1 },
+>              Lambda { from = Node 0, to = Node 2 },
+>              Lambda { from = Node 2, to = Node 0 }
 >              ],
 >              initial = Node 0,
 >              final = DS.fromList [ Node 3 ]
@@ -192,7 +195,10 @@ arbitraria sea de valores correctos.
 \begin{lstlisting}
 
 > instance Arbitrary NFANode where
->   arbitrary = undefined
+>   arbitrary = undefined --nfaNodes
+>       --where nfaNodes = suchThat (liftM Node arbitrary) (> 0)
+>
+>
 
 \end{lstlisting}
 
@@ -268,8 +274,13 @@ primera en estilo \emph{point-free} -- elegancia y categoría.}
 \begin{lstlisting}
 
 > isMove, isLambda :: Transition -> Bool
-> isMove   = undefined
-> isLambda = undefined
+> isMove                                = not . isLambda
+> isLambda Lambda { from = _ , to = _ } = True
+> isLambda _                            = False
+>
+> m1 = Move   {from = Node 0 , to = Node 1 , sym = 'a'}
+> m2 = Lambda {from = Node 0 , to = Node 0}
+>
 
 \end{lstlisting}
 
@@ -296,7 +307,11 @@ auxiliares:
   \begin{lstlisting}
 
 > lambdaMoves :: NFA -> NFANode -> DS.Set NFANode
-> lambdaMoves = undefined
+> lambdaMoves nfa node = DS.foldl' f DS.empty (moves nfa)
+>   where f acc trans = if (isLambda trans) && (from trans == node)
+>                       then DS.insert (to trans) acc
+>                       else acc
+>
 
   \end{lstlisting}
 
@@ -308,7 +323,12 @@ auxiliares:
   \begin{lstlisting}
 
 > normalMoves :: NFA -> Char -> NFANode -> DS.Set NFANode
-> normalMoves = undefined
+> normalMoves nfa c node = DS.foldl' f DS.empty (moves nfa)
+>   where f acc trans = if (isMove trans) && (from trans == node) 
+>                                         && (sym trans  == c)
+>                       then DS.insert (to trans) acc
+>                       else acc
+>
 
   \end{lstlisting}
 
