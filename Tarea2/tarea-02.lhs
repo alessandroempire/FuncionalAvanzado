@@ -358,7 +358,12 @@ auxiliares:
   \begin{lstlisting}
 
 > fixSet :: Ord a => (a -> DS.Set a) -> DS.Set a -> DS.Set a
-> fixSet f s = undefined
+> fixSet f s = let newSet = DS.foldl' g DS.empty s
+>              in  if (newSet == s)
+>                  then newSet
+>                  else fixSet f newSet
+>   where g acc x = DS.union acc (f x)
+>
 
   \end{lstlisting}
 
