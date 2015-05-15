@@ -359,12 +359,16 @@ auxiliares:
 
   \begin{lstlisting}
 
-> --destinations :: NFA -> Char -> NFANode -> DS.Set NFANode
-> destinations nfa c node = DS.foldl g DS.empty lambdaC
->   where lambdaC = fixSet lambdaNodes (DS.singleton node)
->            where lambdaNodes n = lambdaMoves nfa n
->         g acc x = acc `DS.union` (normalMoves nfa c x)
-
+> destinations :: NFA -> Char -> NFANode -> DS.Set NFANode
+> destinations nfa c node = DS.foldl g DS.empty $ 
+>                               fixSet lambdaN (DS.singleton node)
+>   where lambdaN n   = lambdaMoves nfa n
+>         g acc x     = acc `DS.union` hard x
+>         hard   nodo =  (before nodo) `DS.union` (after nodo)
+>         before nodo = DS.foldl' g1 DS.empty $ 
+>                            fixSet lambdaN (DS.singleton nodo)
+>            where g1 acc x = acc `DS.union` (normalMoves nfa c x)
+>         after  nodo = fixSet lambdaN (normalMoves nfa c nodo)
 
   \end{lstlisting}
 
