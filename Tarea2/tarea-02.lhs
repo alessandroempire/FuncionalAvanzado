@@ -408,12 +408,11 @@ La función principal de este simulador será
 > type Eval1 = IO ()
 > 
 > eval1 :: NFA -> [Char] -> Eval1
-> eval1 nfa xs = print $ DS.delete (DS.empty) $
->                    fst $ foldl g (DS.singleton i, i) xs
->   where g (set, nodo) char = (set `DS.union` (f nodo)  , (f1 nodo))
+> eval1 nfa xs = print $ 
+>                    fst $ foldl g (Seq.singleton i, i) xs
+>   where g (seq, nodo) char = ( (Seq.|>) seq (f1 nodo)  , (f1 nodo))
 >          where f1 set = DS.unions $ 
 >                           map (destinations nfa char) $ DS.toList set
->                f  set = DS.map (destinations nfa char) set
 >         i = DS.singleton $ initial nfa
 
 \end{lstlisting}
