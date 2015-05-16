@@ -171,10 +171,7 @@ $\lambda-$NFA
 >                Move { from = Node 0, to = Node 0, sym = 'a' },
 >                Move { from = Node 0, to = Node 1, sym = 'a' },
 >                Move { from = Node 1, to = Node 2, sym = 'b' },
->                Move { from = Node 2, to = Node 3, sym = 'b' },
->              Lambda { from = Node 0, to = Node 1 },
->              Lambda { from = Node 0, to = Node 2 },
->              Lambda { from = Node 2, to = Node 0 }
+>                Move { from = Node 2, to = Node 3, sym = 'b' }
 >              ],
 >              initial = Node 0,
 >              final = DS.fromList [ Node 3 ]
@@ -405,6 +402,21 @@ y transformadores.
 
 \noindent
 La función principal de este simulador será
+
+\begin{lstlisting}
+
+> type Eval1 = IO ()
+> 
+> eval1 :: NFA -> [Char] -> Eval1
+> eval1 nfa xs = print $ DS.delete (DS.empty) $
+>                    fst $ foldl g (DS.singleton i, i) xs
+>   where g (set, nodo) char = (set `DS.union` (f nodo)  , (f1 nodo))
+>          where f1 set = DS.unions $ 
+>                           map (destinations nfa char) $ DS.toList set
+>                f  set = DS.map (destinations nfa char) set
+>         i = DS.singleton $ initial nfa
+
+\end{lstlisting}
 
 \begin{lstlisting}
 
