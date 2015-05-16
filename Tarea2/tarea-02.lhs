@@ -524,7 +524,8 @@ alrededor de las siguientes funciones:
   \begin{lstlisting}
 
 > accepting :: NFA -> DS.Set NFANode -> Bool
-> accepting = undefined
+> accepting nfa set =  DS.foldl' g False set
+>   where g acc nodo = acc || (nodo `DS.member` (final nfa))
 
   \end{lstlisting}
 \item
