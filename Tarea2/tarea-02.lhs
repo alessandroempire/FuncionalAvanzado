@@ -410,7 +410,10 @@ La función principal de este simulador será
 \begin{lstlisting}
 
 > runNFA :: NFA -> [Char] -> IO ()
-> runNFA nfa word = undefined
+> runNFA nfa word = do ((a,b), c) <- evalM5 nfa (initialState word) eval5'
+>                      case a of
+>                          Left a  -> print a
+>                          Right a -> print b
 
 \end{lstlisting}
 
@@ -694,32 +697,29 @@ Mostraremos los pasos para ir combinando correctamente los monads
 >                       (WriterT NFALog
 >                           (StateT NFARun IO))) a
 >
-> eval5 :: Eval5 (NFALog)
+> eval5' :: Eval5 ()
+> eval5' = do tell $ Seq.singleton (DS.singleton (Node 0)) 
+>             eval5
+>
+> eval5 :: Eval5 ()
 > eval5 = do 
 >    nfa <- ask
 >    s <- get
->    (a, set) <- listen
 >    let word = w s
 >        act  = qs s
 >    if (null word ) 
->    then checkReject nfa set act
+>    then do unless (accepting nfa act) $ throwError $ Reject act
 >    else do let c = head word
 >            when (DS.null (dst nfa c act)) $ 
->                 throwError $ Stuck act word
+>               throwError $ Stuck act word
 >            put $ s {w = tail word, qs = dst nfa c act}
->            tell $ ((Seq.|>) set (dst nfa c act))
->            eval5 --((Seq.|>) set (dst nfa c act))
+>            tell $ (Seq.singleton (dst nfa c act))
+>            eval5
 >   where dst nfa c act = getDest nfa c act
 >
-> 
-> --evalInitial5 :: Eval5 (NFALog)
-> --evalInitial5 = do nfa <- as
-> --                  
-> --    where node0 nfa = DS.singleton (initial nfa) 
->
-> --evalM5 :: NFA -> NFARun 
-> --              -> Eval5 (Seq.Seq (DS.Set NFANode)) 
-> --              -> IO (Either NFAReject a, NFALog, NFARun)
+> evalM5 :: NFA -> NFARun 
+>               -> Eval5 ()
+>               -> IO ((Either NFAReject (), NFALog), NFARun)
 > evalM5 nfa init = (flip runStateT init) . runWriterT . 
 >                    runErrorT . (flip runReaderT) nfa
 
