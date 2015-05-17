@@ -64,6 +64,10 @@
 > import Control.Monad
 > import Control.Monad.RWS
 > import Control.Monad.Error
+> import Control.Monad.State
+> import Control.Monad.Writer
+> import Control.Monad.Error
+> import Control.Monad.Reader
 > import qualified Data.Sequence as Seq
 > import qualified Data.Set as DS
 > import Data.Char
@@ -405,22 +409,6 @@ La función principal de este simulador será
 
 \begin{lstlisting}
 
-> type Eval1 = IO ()
-> 
-> eval1 :: NFA -> [Char] -> Eval1
-> eval1 nfa xs = print $ fst $ foldl g (Seq.singleton i, i) xs
->   where g (seq, nodo) char = ( (Seq.|>) seq (f1 nodo)  , (f1 nodo))
->          where f1 set = DS.unions $ 
->                           map (destinations nfa char) $ DS.toList set
->         i = DS.singleton $ initial nfa
->
-> type Eval2 = ErrorT NFAReject IO ()
->
-
-\end{lstlisting}
-
-\begin{lstlisting}
-
 > runNFA :: NFA -> [Char] -> IO ()
 > runNFA nfa word = undefined
 
@@ -515,7 +503,7 @@ alrededor de las siguientes funciones:
   \begin{lstlisting}
 
 > initialState :: String -> NFARun
-> initialState word = undefined
+> initialState word = NFARun {w = word, qs = DS.singleton (Node 0)} 
 
   \end{lstlisting}
 \item
@@ -573,6 +561,60 @@ comprobar:
 
 > prop_acceptancelength :: NFA -> String -> Property
 > prop_acceptancelength nfa w = undefined
+
+  \end{lstlisting}
+\end{itemize}
+
+Mostraremos los pasos para ir combinando correctamente los monads
+\texttt{Reader}, \texttt{Writer}, \texttt{State} y \texttt{Error}.
+
+\begin{itemize}    
+\item 
+  1) Colocamos el Monad IO ()
+  \begin{lstlisting}
+
+> type Eval1 a = IO a
+>
+> eval1 :: NFA -> [Char] -> Seq.Seq (DS.Set NFANode )
+>              -> DS.Set NFANode -> Eval1 (Seq.Seq (DS.Set NFANode))
+> eval1 nfa []     set act = return set
+> eval1 nfa (x:xs) set act = eval1 nfa xs ((Seq.|>) set d) d
+>   where d = getDest nfa x act
+> 
+> getDest :: NFA -> Char -> DS.Set NFANode -> DS.Set NFANode
+> getDest nfa char set = DS.unions . map (destinations nfa char) $ DS.toList set
+>
+> evalM1 :: NFA -> [Char] -> Eval1 (Seq.Seq (DS.Set NFANode)) 
+> evalM1 nfa word = eval1 nfa word (Seq.singleton node0) node0
+>     where node0 = DS.singleton (initial nfa) 
+
+  \end{lstlisting}
+
+\item
+  2) Colocamos el transformador de error sobre el monad IO 
+  \begin{lstlisting}
+
+> type Eval2 a =  ErrorT NFAReject IO a
+> 
+> eval2 :: NFA -> [Char] -> Seq.Seq (DS.Set NFANode )
+>              -> DS.Set NFANode -> Eval2 (Seq.Seq (DS.Set NFANode ))
+> eval2 nfa []     set act = checkReject nfa set act
+> eval2 nfa w@(x:xs) set act = if (d == DS.empty)
+>                              then throwError $ Stuck act w
+>                              else eval2 nfa xs ((Seq.|>) set d) d  
+>   where d = getDest nfa x act
+>
+> checkReject nfa set act = if (accepting nfa act)
+>                           then return set
+>                           else throwError $ Reject act
+>
+> evalA2 :: NFA -> [Char] -> Eval2 (Seq.Seq (DS.Set NFANode ))
+> evalA2 nfa word = eval2 nfa word (Seq.singleton node0) node0
+>     where node0 = DS.singleton (initial nfa) 
+>
+> --evalM2 :: Eval2 (Seq.Seq (DS.Set NFANode )) 
+> --          -> Either NFAReject a
+> evalM2 = runErrorT
 
   \end{lstlisting}
 \end{itemize}
