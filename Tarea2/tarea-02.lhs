@@ -584,12 +584,14 @@ Mostraremos los pasos para ir combinando correctamente los monads
 > getDest :: NFA -> Char -> DS.Set NFANode -> DS.Set NFANode
 > getDest nfa char set = DS.unions . map (destinations nfa char) $ DS.toList set
 >
-> evalM1 :: NFA -> [Char] -> Eval1 (Seq.Seq (DS.Set NFANode)) 
-> evalM1 nfa word = eval1 nfa word (Seq.singleton node0) node0
+> evalInicial1 :: NFA -> [Char] -> Eval1 (Seq.Seq (DS.Set NFANode)) 
+> evalInicial1 nfa word = eval1 nfa word (Seq.singleton node0) node0
 >     where node0 = DS.singleton (initial nfa) 
+>
+> evalM1 :: Eval1 a -> IO (a)
+> evalM1 e = e 
 
   \end{lstlisting}
-
 \item
   2) Colocamos el transformador de error sobre el monad IO 
   \begin{lstlisting}
@@ -608,13 +610,20 @@ Mostraremos los pasos para ir combinando correctamente los monads
 >                           then return set
 >                           else throwError $ Reject act
 >
-> evalA2 :: NFA -> [Char] -> Eval2 (Seq.Seq (DS.Set NFANode ))
-> evalA2 nfa word = eval2 nfa word (Seq.singleton node0) node0
+> evalInitial2 :: NFA -> [Char] -> Eval2 (Seq.Seq (DS.Set NFANode ))
+> evalInitial2 nfa word = eval2 nfa word (Seq.singleton node0) node0
 >     where node0 = DS.singleton (initial nfa) 
 >
-> --evalM2 :: Eval2 (Seq.Seq (DS.Set NFANode )) 
-> --          -> Either NFAReject a
+> evalM2 :: Eval2 (Seq.Seq (DS.Set NFANode )) 
+>           -> IO (Either NFAReject (Seq.Seq (DS.Set NFANode )))
 > evalM2 = runErrorT
+
+  \end{lstlisting}
+\item
+  3) Colocamos el Monad Reader sobre el monad construido en el paso 2. 
+  \begin{lstlisting}
+
+> type Eval3 a = ReaderT NFA (ErrorT NFAReject IO) a
 
   \end{lstlisting}
 \end{itemize}

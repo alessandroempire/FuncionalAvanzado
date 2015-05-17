@@ -37,7 +37,7 @@ ex3 = (Mul (Const 2) ex1)
 ex4 = (Add (Mul ex2 (Const 5)) (ex3))
 ex5 = (Add (Div (Const 42) (Const 2)) (Mul (Const 3) (Const 7)))
 
-type Eval1 a = Identity a
+type Eval1 a = IO a
 
 --eval1 :: Env -> Exp -> Eval1 Int
 eval1 env (Const i) = return i
@@ -55,8 +55,8 @@ eval1 env (Div l r) = do i1 <- eval1 env l
                          i2 <- eval1 env r
                          return $ i1 `div` i2
 
-evalM1 :: Eval1 a -> a
-evalM1 = runIdentity
+evalM1 ::(Show a) => Eval1 a -> IO (a)
+evalM1 e = e 
 
 data ExpError = DivisionPorCero
               | NumeroDeMalaSuerte
@@ -65,7 +65,7 @@ data ExpError = DivisionPorCero
 
 instance Error ExpError
 
-type Eval2 a = ErrorT ExpError Identity a
+type Eval2 a = ErrorT ExpError IO a
 
 eval2 :: Env -> Exp -> Eval2 Int
 eval2 env (Const i) = checkForThirteen i
@@ -87,8 +87,9 @@ checkForThirteen i = if i == 13 then throwError NumeroDeMalaSuerte
                                 else return i
 
 
---evalM2 :: Eval2 a -> Either ExpError a
-evalM2 = runIdentity . runErrorT 
+evalM2 :: (Show a) => Eval2 a -> IO (Either ExpError a)
+--evalM2 :: (Show a) => Eval2 a -> IO ()
+evalM2 = runErrorT 
 
 type Eval3 a = ReaderT Env (ErrorT ExpError Identity) a
 
