@@ -613,7 +613,8 @@ buscando la fuerza para alcanzar otro beta y echar pa'lante.
 
 \begin{lstlisting}
 
-> data Otro a = Otro ((a -> Beta) -> Beta)
+> --data Otro a = Otro ((a -> Beta) -> Beta)
+> data Otro a = Otro {fromOtro :: ((a -> Beta) -> Beta)}
 
 \end{lstlisting}
 
@@ -651,7 +652,9 @@ otro Beta
 \begin{lstlisting}
 
 > hacer :: Otro a -> Beta
-> hacer = undefined
+> hacer m = undefined --const $ fromOtro m
+
+> h m = --fromOtro m
 
 \end{lstlisting}
 
@@ -662,7 +665,7 @@ si traes fuerza, te quedas quieto.
 \begin{lstlisting}
 
 > quieto :: Otro a
-> quieto = undefined
+> quieto = Otro $ \_ -> Quieto
 
 \end{lstlisting}
 
@@ -673,8 +676,8 @@ allí uno saca fuerza
 
 \begin{lstlisting}
 
-> chambea :: IO a -> Otro a
-> chambea = undefined
+> --chambea :: IO a -> Otro a
+> chambea m = undefined --Otro $ \k -> Chamba $ return $ (m >>= k)
 
 \end{lstlisting}
 
@@ -707,7 +710,7 @@ y se la vacilan
 \begin{lstlisting}
 
 > vaca :: [Beta] -> IO ()
-> vaca = undefined
+> vaca = mapM_ print
 
 \end{lstlisting}
 
@@ -722,8 +725,9 @@ si, menor.
 \begin{lstlisting}
 
 > instance Monad Otro where
->   return x       = undefined
->   (Otro f) >>= g = undefined
+>   return x       = Otro $ \k -> k x
+>   (Otro f) >>= g = Otro $
+>                    \k -> fromOtro (Otro f) (\x -> fromOtro (g x) k)
 
 \end{lstlisting}
 
