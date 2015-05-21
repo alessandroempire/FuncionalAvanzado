@@ -178,7 +178,7 @@ $\lambda-$NFA
 >                Move { from = Node 2, to = Node 3, sym = 'b' }
 >              ],
 >              initial = Node 0,
->              final = DS.fromList [ Node 3 ]
+>              final = DS.fromList [ Node 3]
 >            }
 >
 > nfa1 = NFA {
@@ -198,7 +198,7 @@ $\lambda-$NFA
 >                Move { from = Node 3, to = Node 2, sym = 'b' }
 >              ],
 >              initial = Node 0,
->              final = DS.fromList [ Node 4 ]
+>              final = DS.fromList [ Node 4 , Node 0]
 >            }
 
 \end{lstlisting}
@@ -216,10 +216,10 @@ arbitraria sea de valores correctos.
 \begin{lstlisting}
 
 > instance Arbitrary NFANode where
->   arbitrary = undefined --nfaNodes
+>   arbitrary = undefined--suchThat $ liftM Node $ getPositive $ Positive
 >       --where nfaNodes = suchThat (liftM Node arbitrary) (> 0)
 >
->
+> prueba = undefined --Node $ getPositive $ Positive
 
 \end{lstlisting}
 
@@ -410,7 +410,7 @@ La función principal de este simulador será
 \begin{lstlisting}
 
 > runNFA :: NFA -> [Char] -> IO ()
-> runNFA nfa word = do ((a,b), c) <- evalM5 nfa (initialState word) eval5'
+> runNFA nfa word = do ((a,b), c) <- start nfa (initialState word) flowF
 >                      case a of
 >                          Left a  -> print a
 >                          Right a -> print b
@@ -421,12 +421,12 @@ La función principal de este simulador será
 >                       (WriterT NFALog
 >                           (StateT NFARun IO))) a
 >
-> eval5' :: Eval5 ()
-> eval5' = do tell $ Seq.singleton (DS.singleton (Node 0)) 
->             eval5
+> flowF :: Eval5 ()
+> flowF = do tell $ Seq.singleton (DS.singleton (Node 0)) 
+>            flow
 >
-> eval5 :: Eval5 ()
-> eval5 = do 
+> flow :: Eval5 ()
+> flow = do 
 >    nfa <- ask
 >    s <- get
 >    let word = w s
@@ -438,13 +438,13 @@ La función principal de este simulador será
 >               throwError $ Stuck act word
 >            put $ s {w = tail word, qs = dst nfa c act}
 >            tell $ (Seq.singleton (dst nfa c act))
->            eval5
+>            flow
 >   where dst nfa c act = getDest nfa c act
 >
-> evalM5 :: NFA -> NFARun 
+> start :: NFA -> NFARun 
 >               -> Eval5 ()
 >               -> IO ((Either NFAReject (), NFALog), NFARun)
-> evalM5 nfa init = (flip runStateT init) . runWriterT . 
+> start nfa init = (flip runStateT init) . runWriterT . 
 >                    runErrorT . (flip runReaderT) nfa
 >
 > getDest :: NFA -> Char -> DS.Set NFANode -> DS.Set NFANode
@@ -590,7 +590,7 @@ comprobar:
   \begin{lstlisting}
 
 > prop_acceptsemptyword :: NFA -> Property
-> prop_acceptsemptyword nfa = undefined
+> prop_acceptsemptyword nfa = undefined --runNFA nfa "" == runNFA nfa ""
 
   \end{lstlisting}
 \item
@@ -613,8 +613,11 @@ buscando la fuerza para alcanzar otro beta y echar pa'lante.
 
 \begin{lstlisting}
 
-> --data Otro a = Otro ((a -> Beta) -> Beta)
-> data Otro a = Otro {fromOtro :: ((a -> Beta) -> Beta)}
+> data Otro a = Otro ((a -> Beta) -> Beta)
+> --data Otro a = Otro {fromOtro :: ((a -> Beta) -> Beta)}
+>
+> fromOtro :: Otro a -> ((a -> Beta) -> Beta)
+> fromOtro (Otro a) = a
 
 \end{lstlisting}
 
@@ -654,7 +657,7 @@ otro Beta
 > hacer :: Otro a -> Beta
 > hacer m = undefined --const $ fromOtro m
 
-> h m = --fromOtro m
+> h m = fromOtro m
 
 \end{lstlisting}
 
@@ -676,8 +679,8 @@ allí uno saca fuerza
 
 \begin{lstlisting}
 
-> --chambea :: IO a -> Otro a
-> chambea m = undefined --Otro $ \k -> Chamba $ return $ (m >>= k)
+> chambea :: IO a -> Otro a
+> chambea m = Otro $ \k -> Chamba $ fmap k m
 
 \end{lstlisting}
 
@@ -726,8 +729,8 @@ si, menor.
 
 > instance Monad Otro where
 >   return x       = Otro $ \k -> k x
->   (Otro f) >>= g = Otro $
->                    \k -> fromOtro (Otro f) (\x -> fromOtro (g x) k)
+>   (Otro f) >>= g = Otro $ \k -> f (\x -> fromOtro (g x) k)
+>                    -- \k -> fromOtro (Otro f) (\x -> fromOtro (g x) k)
 
 \end{lstlisting}
 

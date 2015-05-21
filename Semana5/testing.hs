@@ -35,7 +35,7 @@ data Tree a = Leaf a | Branch (Tree a) a (Tree a)
             deriving (Show,Eq)
 
 -- Inocente
-- instance Arbitrary a => Arbitrary (Tree a) where
+instance Arbitrary a => Arbitrary (Tree a) where
   arbitrary = tree
     where tree = oneof [ liftM Leaf arbitrary,
                          liftM3 Branch tree arbitrary tree ]
