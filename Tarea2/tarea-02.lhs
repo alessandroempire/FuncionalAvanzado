@@ -614,7 +614,6 @@ buscando la fuerza para alcanzar otro beta y echar pa'lante.
 \begin{lstlisting}
 
 > data Otro a = Otro ((a -> Beta) -> Beta)
-> --data Otro a = Otro {fromOtro :: ((a -> Beta) -> Beta)}
 >
 > fromOtro :: Otro a -> ((a -> Beta) -> Beta)
 > fromOtro (Otro a) = a
@@ -655,9 +654,7 @@ otro Beta
 \begin{lstlisting}
 
 > hacer :: Otro a -> Beta
-> hacer m = undefined --const $ fromOtro m
-
-> h m = fromOtro m
+> hacer m = fromOtro m (const Quieto)
 
 \end{lstlisting}
 
@@ -691,7 +688,7 @@ para compartir la fuerza, aunque al final quedes tablas
 \begin{lstlisting}
 
 > convive :: Otro a -> Otro ()
-> convive = undefined
+> convive m = Otro $ \k -> Convive (hacer m) (k ())
 
 \end{lstlisting}
 
@@ -702,7 +699,7 @@ busca por su lado, y luego se juntan.
 \begin{lstlisting}
 
 > pana :: Otro a -> Otro a -> Otro a
-> pana = undefined
+> pana x y = Otro $ \k -> Convive (hacer x) (hacer y)
 
 \end{lstlisting}
 
@@ -713,7 +710,11 @@ y se la vacilan
 \begin{lstlisting}
 
 > vaca :: [Beta] -> IO ()
-> vaca = mapM_ print
+> vaca [] = return ()
+> vaca (x:xs) = printer x
+>   where printer (Chamba y)    = do y >>= \b -> vaca(xs ++ [b])
+>         printer (Convive y z) = vaca (xs ++ [y,z])
+>         printer (Quieto)      = vaca xs
 
 \end{lstlisting}
 
@@ -730,7 +731,6 @@ si, menor.
 > instance Monad Otro where
 >   return x       = Otro $ \k -> k x
 >   (Otro f) >>= g = Otro $ \k -> f (\x -> fromOtro (g x) k)
->                    -- \k -> fromOtro (Otro f) (\x -> fromOtro (g x) k)
 
 \end{lstlisting}
 
