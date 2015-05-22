@@ -216,10 +216,8 @@ arbitraria sea de valores correctos.
 \begin{lstlisting}
 
 > instance Arbitrary NFANode where
->   arbitrary = undefined--suchThat $ liftM Node $ getPositive $ Positive
->       --where nfaNodes = suchThat (liftM Node arbitrary) (> 0)
->
-> prueba = undefined --Node $ getPositive $ Positive
+>   arbitrary = do Positive n <- arbitrary
+>                  return $ Node n
 
 \end{lstlisting}
 
@@ -234,7 +232,32 @@ falta generarlo sino incluirlo manualmente en los $\lambda-$NFA.
 \begin{lstlisting}
 
 > instance Arbitrary NFA where
->   arbitrary = undefined
+>   arbitrary = do alpha <- listOf1 $ 
+>                             suchThat (arbitrary :: Gen Char) isAsciiLower
+>                  nodes <- listOf1 $ (arbitrary :: Gen NFANode)
+>                  tran  <- transiciones alpha nodes
+>                  trans <- listOf1 tran
+>                  fina  <- listOf $ oneof $ map return nodes
+>                  let sig = DS.fromList alpha
+>                      sta = DS.singleton (Node 0) `DS.union` DS.fromList nodes
+>                      mov = DS.fromList trans
+>                      ini = Node 0
+>                      fin = DS.fromList fina
+>                  return $ NFA { sigma   = sig,
+>                                 states  = sta,
+>                                 moves   = mov,
+>                                 initial = ini,
+>                                 final   = fin 
+>                                }
+> --sample' $ (arbitrary :: Gen NFA)
+> -- transiciones 
+> transiciones alpha nodes = do 
+>   c <- oneof $ map return alpha
+>   s1 <- oneof $ map return nodes
+>   s2 <- oneof $ map return nodes
+>   return $ frequency [ (5, return (Move {from = s1, to = s2, sym = c})),
+>                        (1, return (Lambda {from = s1, to = s2 }))
+>                      ]
 
 \end{lstlisting}
 
@@ -712,7 +735,8 @@ y se la vacilan
 > vaca :: [Beta] -> IO ()
 > vaca [] = return ()
 > vaca (x:xs) = printer x
->   where printer (Chamba y)    = do y >>= \b -> vaca(xs ++ [b])
+>   where printer (Chamba y)    = do a <- y 
+>                                    vaca(xs ++ [a])
 >         printer (Convive y z) = vaca (xs ++ [y,z])
 >         printer (Quieto)      = vaca xs
 
