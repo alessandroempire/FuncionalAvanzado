@@ -180,26 +180,6 @@ $\lambda-$NFA
 >              initial = Node 0,
 >              final = DS.fromList [ Node 3]
 >            }
->
-> nfa1 = NFA {
->              sigma  = DS.fromList "ab",
->              states = DS.fromList $ fmap Node [0..3],
->              moves  = DS.fromList [
->                Move { from = Node 0, to = Node 0, sym = 'b' },
->                Move { from = Node 0, to = Node 1, sym = 'a' },
->              Lambda { from = Node 0, to = Node 2 },
->                Move { from = Node 1, to = Node 1, sym = 'a' },
->                Move { from = Node 1, to = Node 1, sym = 'b' },
->                Move { from = Node 1, to = Node 3, sym = 'b' },
->                Move { from = Node 2, to = Node 2, sym = 'a' },
->                Move { from = Node 2, to = Node 1, sym = 'b' },
->              Lambda { from = Node 2, to = Node 3 },
->                Move { from = Node 3, to = Node 3, sym = 'a' },
->                Move { from = Node 3, to = Node 2, sym = 'b' }
->              ],
->              initial = Node 0,
->              final = DS.fromList [ Node 4 , Node 0]
->            }
 
 \end{lstlisting}
 
@@ -229,6 +209,12 @@ positivos que Ud. debe aprovechar. Como el estado inicial
 \texttt{(Node 0)} \emph{siempre} debe estar presente, no hace
 falta generarlo sino incluirlo manualmente en los $\lambda-$NFA.
 
+En cada paso se genera un conjunto de valores que cumplan 
+con la estructura consistente. 
+Por ejemplo, primero se genera alpha, un conjunto no vacio 
+de caracteres en letras minusculas. Segundo un conjunto no 
+vacio de nodos con enteros positivos. 
+
 \begin{lstlisting}
 
 > instance Arbitrary NFA where
@@ -249,8 +235,7 @@ falta generarlo sino incluirlo manualmente en los $\lambda-$NFA.
 >                                 initial = ini,
 >                                 final   = fin 
 >                                }
-> --sample' $ (arbitrary :: Gen NFA)
-> -- transiciones 
+> 
 > transiciones alpha nodes = do 
 >   c <- oneof $ map return alpha
 >   s1 <- oneof $ map return nodes
@@ -321,9 +306,6 @@ primera en estilo \emph{point-free} -- elegancia y categoría.}
 > isMove                                = not . isLambda
 > isLambda Lambda { from = _ , to = _ } = True
 > isLambda _                            = False
->
-> m1 = Move   {from = Node 0 , to = Node 1 , sym = 'a'}
-> m2 = Lambda {from = Node 0 , to = Node 0}
 
 \end{lstlisting}
 
@@ -381,6 +363,17 @@ auxiliares:
   desplazamientos desde ese conjunto ahora consumiendo la entrada,
   y luego la $\lambda-$clausura final.
 
+  Explicacion:
+  Para calcular destinations desde un nodo se le calcula la 
+  LambdaClausura partiendo de ese nodo. Esto nos produce un 
+  conjunto, al cual se aplica fold'. A cada nodo se le debe 
+  encontrar los nodos al que puede llegar, con la condicion
+  que siempre consuma la entrada. Observamos dos casos: 
+  a) Partiendo del nodo x, se calcula la LambdaClausura y 
+  luego se consume un caracter. b) Se consume un caracter
+  y luego al nodo resultante (si hay) se le calcula la
+  LambdaClausura. 
+
   \begin{lstlisting}
 
 > destinations :: NFA -> Char -> NFANode -> DS.Set NFANode
@@ -403,6 +396,11 @@ auxiliares:
   elementos del conjunto que produce nuevos conjuntos, los cuales
   deben ser unidos para ampliar el conjunto, hasta que no se pueda
   ampliar más. Escriba la función
+
+  La idea es, dado un conjunto s [A1, A2, ..., An ], se aplica la 
+  funcion f a cada uno de los elementos, el cual produce a su vez
+  un conjunto, luego se hace la union para obtener un nuevo conjunto.
+  Cuando el conjunto deja de crecer, se para la recursion. 
 
   \begin{lstlisting}
 
@@ -437,6 +435,7 @@ La función principal de este simulador será
 >                      case a of
 >                          Left a  -> print a
 >                          Right a -> print b
+>
 > type NFALog = Seq.Seq (DS.Set NFANode) 
 >
 > type Eval5 a = ReaderT NFA 
@@ -613,7 +612,12 @@ comprobar:
   \begin{lstlisting}
 
 > prop_acceptsemptyword :: NFA -> Property
-> prop_acceptsemptyword nfa = undefined --runNFA nfa "" == runNFA nfa ""
+> prop_acceptsemptyword nfa = hasFinal nfa ==>
+>                                accepting nfa (DS.singleton (Node 0))
+>   where hasFinal nfa   = not $ DS.null (final nfa) 
+>         --lambdaClausura = fixSet lambdaN (DS.singleton (Node 0))
+>         --  where lambdaN node = lambdaMoves nfa node
+ 
 
   \end{lstlisting}
 \item
@@ -622,7 +626,33 @@ comprobar:
   \begin{lstlisting}
 
 > prop_acceptancelength :: NFA -> String -> Property
-> prop_acceptancelength nfa w = undefined
+> prop_acceptancelength nfa w = undefined 
+> --accepts nfa w ==> accepting nfa (DS.singleton (Node 0))
+> --accepts ==> partialRun == (length w) 
+>  
+> partialRun nfa w = do ((a,b), c) <- start nfa (initialState w) flowF
+>                       return $ Seq.length b
+>
+> 
+> accepts nfa w = do ((a,b), c) <- start nfa (initialState w) flowF 
+>                    return a
+>                    --case a of
+>                    --   Left a -> return $ False
+>                    --   Right a -> return $ True
+>
+> aux :: IO(Bool) -> Bool
+> aux b = undefined
+> 
+> --k :: IO(Either NFAReject ()) -> Bool
+> k e = do e >>= (return . isRight)
+>                     -- Left e -> False
+>                     -- Right e -> True
+>
+> isRight :: Either a b -> Bool
+> isRight (Left  _) = False
+> isRight (Right _) = True
+
+  
 
   \end{lstlisting}
 \end{itemize}
