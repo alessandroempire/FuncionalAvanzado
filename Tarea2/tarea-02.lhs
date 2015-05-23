@@ -615,9 +615,6 @@ comprobar:
 > prop_acceptsemptyword nfa = hasFinal nfa ==>
 >                                accepting nfa (DS.singleton (Node 0))
 >   where hasFinal nfa   = not $ DS.null (final nfa) 
->         --lambdaClausura = fixSet lambdaN (DS.singleton (Node 0))
->         --  where lambdaN node = lambdaMoves nfa node
- 
 
   \end{lstlisting}
 \item
@@ -626,33 +623,17 @@ comprobar:
   \begin{lstlisting}
 
 > prop_acceptancelength :: NFA -> String -> Property
-> prop_acceptancelength nfa w = undefined 
-> --accepts nfa w ==> accepting nfa (DS.singleton (Node 0))
-> --accepts ==> partialRun == (length w) 
+> prop_acceptancelength nfa w = undefined --accepts nfa w ==> partialRun nfa w
 >  
 > partialRun nfa w = do ((a,b), c) <- start nfa (initialState w) flowF
->                       return $ Seq.length b
+>                       return $ Seq.length b == (length w) + 1
 >
-> 
 > accepts nfa w = do ((a,b), c) <- start nfa (initialState w) flowF 
->                    return a
->                    --case a of
->                    --   Left a -> return $ False
->                    --   Right a -> return $ True
->
-> aux :: IO(Bool) -> Bool
-> aux b = undefined
-> 
-> --k :: IO(Either NFAReject ()) -> Bool
-> k e = do e >>= (return . isRight)
->                     -- Left e -> False
->                     -- Right e -> True
+>                    return $ isRight a
 >
 > isRight :: Either a b -> Bool
 > isRight (Left  _) = False
 > isRight (Right _) = True
-
-  
 
   \end{lstlisting}
 \end{itemize}
