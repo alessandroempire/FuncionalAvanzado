@@ -45,9 +45,9 @@
 
 \title{CI4251 - Programación Funcional Avanzada \\ Tarea 3}
 
-\author{Ernesto Hernández-Novich\\
-86-17791\\
-\href{mailto:emhn@usb.ve}{<emhn@usb.ve>}}
+\author{Alessandro La Corte\\
+09-10430\\
+\href{mailto:alessandroempire@gmail.com}{<alessandroempire@gmail.com>}}
 
 \date{Mayo 26, 2015}
 
@@ -134,6 +134,7 @@ y otra empleando Memoria Transaccional (\texttt{STM}).
 \begin{lstlisting}
 
 > import System.Random
+> import Control.Concurrent.STM
 >
 > randomSeed :: Int
 > randomSeed = 42
@@ -173,5 +174,16 @@ Finalmente, para poder comprobar la fidelidad de su simulación
 es necesario que use números pseudo-aleatorios, como los que
 se proveen en \texttt{System.Random} \emph{fuera} del
 monad \texttt{IO}, usando \texttt{randomSeed} como semilla.
+\\
+
+\noindent
+Solucion con Memoria Transaccional
+
+\begin{lstlisting}
+
+> 
+
+\end{lstlisting}
+
 
 \end{document}
