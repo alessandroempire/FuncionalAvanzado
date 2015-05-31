@@ -134,7 +134,10 @@ y otra empleando Memoria Transaccional (\texttt{STM}).
 \begin{lstlisting}
 
 > import System.Random
+> import Control.Concurrent
 > import Control.Concurrent.STM
+> import Control.Monad
+> import Data.Sequence as DS hiding (replicate, replicateM)
 >
 > randomSeed :: Int
 > randomSeed = 42
@@ -179,9 +182,106 @@ monad \texttt{IO}, usando \texttt{randomSeed} como semilla.
 \noindent
 Solucion con Memoria Transaccional
 
+Se tiene una tupla en donde el primer elemento es:
+Cantidad de empanadas disponibles para comer. El 
+segundo elemento es la cantidad total de empanadas 
+preparadas por Rafita
 \begin{lstlisting}
 
+> type Empanadas = TVar (Int, Int)
+>
+> newRafita :: IO (Empanadas)
+> newRafita = do v <- newTVarIO (0,0)
+>                return v
+>
+> cook :: Empanadas -> Int -> STM ()
+> cook e n = do s <- readTVar e
+>               if (fst s == 0)
+>               then writeTVar e (n, (snd s) + n)
+>               else retry
+
+\end{lstlisting}
+
+Cantidad de empanadas que comio el N-esimo parroquiano
+\begin{lstlisting}
+ 
+> type Parroquiano = TVar Int
+>
+> newParroquiano :: IO (Parroquiano)
+> newParroquiano = do v <- newTVarIO 0
+>                     return v
+>
+> eat :: Parroquiano -> Empanadas -> STM ()
+> eat p e = do s <- readTVar p
+>              t <- readTVar e
+>              if (fst t == 0)
+>              then retry
+>              else writeTVar p (s+1)
+
+\end{lstlisting}
+
+\begin{lstlisting}
+
+> type Buffer a = TVar (DS.Seq a)
+>
+> newBuffer :: IO (Buffer a)
+> newBuffer = newTVarIO DS.empty
 > 
+> put :: Buffer a -> a -> STM ()
+> put buffer item = do ls <- readTVar buffer
+>                      writeTVar buffer (ls |> item)
+> 
+> get :: Buffer a -> STM a
+> get buffer = do ls <- readTVar buffer
+>                 case viewl ls of
+>                   EmptyL       -> retry
+>                   item :< rest -> do writeTVar buffer rest
+>                                      return item
+
+\end{lstlisting}
+
+\begin{lstlisting}
+
+> simulation n m = do parroquianos <- replicateM m newParroquiano
+>                     empanadas <- newRafita
+>                     outputBuffer <- newBuffer
+>                     forkIO $ rafitaSim n empanadas outputBuffer
+>                     forM_ [0..m-1] $ \i ->
+>                       forkIO (parroquianoSim i (parroquianos!!i)
+>                                 empanadas outputBuffer)
+>                     output outputBuffer
+> 
+> rafitaSim n empanadas out = 
+>   do atomically $ cook empanadas n 
+>      atomically $ put out ("Rafita esta cocinando.")
+>      --rafitaDelay
+>      randomDelay
+>      atomically $ put out ("Rafita sirvio las empanadas.")
+>      rafitaSim n empanadas out
+>
+> parroquianoSim n parroquiano empanada out =
+>   do atomically $ eat parroquiano empanada
+>      atomically $ put out ("Parroquiano " ++ show n ++ "come empanada.")
+>      -- parroquianoDelay
+>      randomDelay
+>      atomically $ put out ("Parroquiano " ++ show n ++ "tiene hambre.")
+>      parroquianoSim n parroquiano empanada out
+>
+> output buffer = 
+>     do str <- atomically $ get buffer
+>        putStrLn str
+>        output buffer
+
+\end{lstlisting}
+
+\begin{lstlisting}
+
+> rafitaDelay = undefined
+>
+> parroquianosDelay = undefined
+>
+> randomDelay = do r <- randomRIO (100000,500000)
+>                  threadDelay r
 
 \end{lstlisting}
 
