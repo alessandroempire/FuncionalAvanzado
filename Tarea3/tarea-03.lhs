@@ -137,7 +137,11 @@ y otra empleando Memoria Transaccional (\texttt{STM}).
 > import Control.Concurrent
 > import Control.Concurrent.STM
 > import Control.Monad
+> import Control.Monad.IO.Class
 > import Data.Sequence as DS hiding (replicate, replicateM)
+> import System.Exit
+> import System.Posix.Signals
+> import qualified Control.Exception as E
 >
 > randomSeed :: Int
 > randomSeed = 42
@@ -180,12 +184,47 @@ monad \texttt{IO}, usando \texttt{randomSeed} como semilla.
 \\
 
 \noindent
+Solucion empleando tecnicas clasicas de concurrencia
+(sincronizacion con MVAR)
+
+\noindent
+Algo
+
+\begin{lstlisting}
+
+> clasic :: Int -> Int -> IO()
+> clasic n m = do empanadas <- newMVar 0
+>                 parroquianos <- replicateM m $ newMvar 0 
+>                 forkIO $ clasicRafitaSim
+>                 
+>
+> clasicRafitaSim = undefined
+>
+>
+>
+
+\end{lstlisting}
+
+
+\noindent
+Algo
+
+\begin{lstlisting}
+
+>
+
+\end{lstlisting}
+
+
+\noindent
 Solucion con Memoria Transaccional
 
+\noindent
 Se tiene una tupla en donde el primer elemento es:
 Cantidad de empanadas disponibles para comer. El 
 segundo elemento es la cantidad total de empanadas 
-preparadas por Rafita
+preparadas por Rafita.
+
 \begin{lstlisting}
 
 > type Empanadas = TVar (Int, Int)
@@ -202,7 +241,9 @@ preparadas por Rafita
 
 \end{lstlisting}
 
+\noindent
 Cantidad de empanadas que comio el N-esimo parroquiano
+
 \begin{lstlisting}
  
 > type Parroquiano = TVar Int
@@ -212,13 +253,18 @@ Cantidad de empanadas que comio el N-esimo parroquiano
 >                     return v
 >
 > eat :: Parroquiano -> Empanadas -> STM ()
-> eat p e = do s <- readTVar p
->              t <- readTVar e
+> eat p e = do t <- readTVar e
 >              if (fst t == 0)
 >              then retry
->              else writeTVar p (s+1)
+>              else do s <- readTVar p
+>                      writeTVar p (s+1)
+>                      writeTVar e ((fst t) - 1, snd t)
 
 \end{lstlisting}
+
+\noindent
+Un buffer para llevar control de las operaciones que 
+se realizan.
 
 \begin{lstlisting}
 
@@ -240,11 +286,26 @@ Cantidad de empanadas que comio el N-esimo parroquiano
 
 \end{lstlisting}
 
+\noindent
+La simulacion de del sistema. 
+
 \begin{lstlisting}
 
+> --myHandler :: [Parroquiano] -> Empanadas -> Buffer [Char] ->IO ()
+> myHandler p e out = do t <- readTVar e
+>                        put out ("Rafita preparo " ++ show (snd t) 
+>                                                   ++ " empanadas")
+>                        --forM_ [0..m-1] $ \i -> aux i (p!!i) FOLD BABY
+>                        return $ output out
+>
 > simulation n m = do parroquianos <- replicateM m newParroquiano
 >                     empanadas <- newRafita
 >                     outputBuffer <- newBuffer
+>                     tid <- myThreadId
+>                     installHandler keyboardSignal 
+>                       --   (Catch (myHandler parroquianos empanadas
+>                       --                     outputBuffer)) Nothing
+>                        (Catch (E.throwTo tid ExitSuccess)) Nothing
 >                     forkIO $ rafitaSim n empanadas outputBuffer
 >                     forM_ [0..m-1] $ \i ->
 >                       forkIO (parroquianoSim i (parroquianos!!i)
@@ -252,19 +313,22 @@ Cantidad de empanadas que comio el N-esimo parroquiano
 >                     output outputBuffer
 > 
 > rafitaSim n empanadas out = 
->   do atomically $ cook empanadas n 
->      atomically $ put out ("Rafita esta cocinando.")
->      --rafitaDelay
->      randomDelay
->      atomically $ put out ("Rafita sirvio las empanadas.")
+>   do atomically $ do cook empanadas n 
+>                      put out ("Rafita esta cocinando.")
+>                      --rafitaDelay
+>                      return randomDelay
+>                      put out ("Rafita sirvio las empanadas.")
 >      rafitaSim n empanadas out
 >
 > parroquianoSim n parroquiano empanada out =
->   do atomically $ eat parroquiano empanada
->      atomically $ put out ("Parroquiano " ++ show n ++ "come empanada.")
+>   do --atomically $ put out ("Parroquiano " ++ show n ++ " tiene hambre.")
+>      atomically $ eat parroquiano empanada
+>      atomically $ put out ("Parroquiano " ++ show n ++ " come empanada.")
 >      -- parroquianoDelay
 >      randomDelay
->      atomically $ put out ("Parroquiano " ++ show n ++ "tiene hambre.")
+>      randomDelay
+>      randomDelay
+>      atomically $ put out ("Parroquiano " ++ show n ++ " tiene hambre.")
 >      parroquianoSim n parroquiano empanada out
 >
 > output buffer = 
@@ -273,6 +337,9 @@ Cantidad de empanadas que comio el N-esimo parroquiano
 >        output buffer
 
 \end{lstlisting}
+
+\noindent
+Generacion de numero aleatorios. 
 
 \begin{lstlisting}
 
@@ -284,6 +351,5 @@ Cantidad de empanadas que comio el N-esimo parroquiano
 >                  threadDelay r
 
 \end{lstlisting}
-
 
 \end{document}
