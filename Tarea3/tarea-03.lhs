@@ -149,8 +149,6 @@ y otra empleando Memoria Transaccional (\texttt{STM}).
 > classic :: Int -> Int -> IO ()
 > classic m n = undefined
 > 
-> transactional :: Int -> Int -> IO ()
-> transactional m n = undefined
 
 \end{lstlisting}
 
@@ -194,9 +192,13 @@ Algo
 
 > clasic :: Int -> Int -> IO()
 > clasic n m = do empanadas <- newMVar 0
->                 parroquianos <- replicateM m $ newMvar 0 
->                 forkIO $ clasicRafitaSim
->                 
+>                 parroquianos <- replicateM m $ newMVar 0 
+>                 print "habla"
+>                 --forkIO $ clasicRafitaSim
+>                 --forM_ [0..m-1] $ \i ->
+>                 --      forkIO (parroquianoSim i (parroquianos!!i)
+>                 --                empanadas outputBuffer)                 
+>
 >
 > clasicRafitaSim = undefined
 >
@@ -218,6 +220,9 @@ Algo
 
 \noindent
 Solucion con Memoria Transaccional
+
+> transactional :: Int -> Int -> IO ()
+> transactional m n = simulationT m n $ mkStdGen randomSeed
 
 \noindent
 Se tiene una tupla en donde el primer elemento es:
@@ -298,38 +303,45 @@ La simulacion de del sistema.
 >                        --forM_ [0..m-1] $ \i -> aux i (p!!i) FOLD BABY
 >                        return $ output out
 >
-> simulation n m = do parroquianos <- replicateM m newParroquiano
->                     empanadas <- newRafita
->                     outputBuffer <- newBuffer
->                     tid <- myThreadId
->                     installHandler keyboardSignal 
->                       --   (Catch (myHandler parroquianos empanadas
->                       --                     outputBuffer)) Nothing
->                        (Catch (E.throwTo tid ExitSuccess)) Nothing
->                     forkIO $ rafitaSim n empanadas outputBuffer
->                     forM_ [0..m-1] $ \i ->
->                       forkIO (parroquianoSim i (parroquianos!!i)
->                                 empanadas outputBuffer)
->                     output outputBuffer
-> 
-> rafitaSim n empanadas out = 
->   do atomically $ do cook empanadas n 
->                      put out ("Rafita esta cocinando.")
->                      --rafitaDelay
->                      return randomDelay
->                      put out ("Rafita sirvio las empanadas.")
->      rafitaSim n empanadas out
+> --test :: IO ()
+> test tid e = undefined --do --print "hola \n"
+>                 --t <- readTVar e
+>                 --print $ "Rafita preparo " ++ show (snd t) ++ " empanadas"
+>                 --E.throwTo tid ExitSuccess
 >
-> parroquianoSim n parroquiano empanada out =
->   do --atomically $ put out ("Parroquiano " ++ show n ++ " tiene hambre.")
->      atomically $ eat parroquiano empanada
->      atomically $ put out ("Parroquiano " ++ show n ++ " come empanada.")
->      -- parroquianoDelay
->      randomDelay
->      randomDelay
->      randomDelay
+>
+>
+> simulationT n m g = 
+>   do parroquianos <- replicateM m newParroquiano
+>      empanadas <- newRafita
+>      outputBuffer <- newBuffer
+>      tid <- myThreadId
+>      installHandler keyboardSignal 
+>          (Catch (test tid empanadas)) Nothing
+>          --  (Catch (myHandler parroquianos empanadas
+>          --                    outputBuffer)) Nothing
+>          --(Catch (E.throwTo tid ExitSuccess)) Nothing
+>      forkIO $ rafitaSimT n empanadas outputBuffer g
+>      forM_ [0..m-1] $ \i ->
+>         forkIO (parroquianoSimT i (parroquianos!!i)
+>                           empanadas outputBuffer g)
+>      output outputBuffer
+> 
+> rafitaSimT n empanadas out g = 
+>   do let gen = rafitaDelay g
+>      atomically $ do put out ("Rafita esta cocinando.")
+>                      cook empanadas n 
+>                      put out ("Rafita sirvio las empanadas.")
+>      threadDelay $ fst gen
+>      rafitaSimT n empanadas out (snd gen)
+>
+> parroquianoSimT n parroquiano empanada out g =
+>   do let gen = parroquianosDelay g
+>      atomically $ do put out ("Parroquiano " ++ show n ++ " come empanada.")
+>                      eat parroquiano empanada
+>      threadDelay $ fst gen
 >      atomically $ put out ("Parroquiano " ++ show n ++ " tiene hambre.")
->      parroquianoSim n parroquiano empanada out
+>      parroquianoSimT n parroquiano empanada out (snd gen)
 >
 > output buffer = 
 >     do str <- atomically $ get buffer
@@ -343,12 +355,11 @@ Generacion de numero aleatorios.
 
 \begin{lstlisting}
 
-> rafitaDelay = undefined
+> rafitaDelay :: (RandomGen g) => g -> (Int, g)
+> rafitaDelay g = randomR (3,5) g
 >
-> parroquianosDelay = undefined
->
-> randomDelay = do r <- randomRIO (100000,500000)
->                  threadDelay r
+> parroquianosDelay :: (RandomGen g) => g -> (Int, g)
+> parroquianosDelay g = randomR (1,7) g
 
 \end{lstlisting}
 
