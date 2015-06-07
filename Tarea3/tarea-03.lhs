@@ -133,6 +133,7 @@ y otra empleando Memoria Transaccional (\texttt{STM}).
 
 \begin{lstlisting}
 
+> {-# LANGUAGE ScopedTypeVariables #-}
 > import System.Random
 > import Control.Concurrent
 > import Control.Concurrent.STM
@@ -145,10 +146,6 @@ y otra empleando Memoria Transaccional (\texttt{STM}).
 >
 > randomSeed :: Int
 > randomSeed = 42
->
-> classic :: Int -> Int -> IO ()
-> classic m n = undefined
-> 
 
 \end{lstlisting}
 
@@ -190,20 +187,59 @@ Algo
 
 \begin{lstlisting}
 
-> clasic :: Int -> Int -> IO()
-> clasic n m = do empanadas <- newMVar 0
->                 parroquianos <- replicateM m $ newMVar 0 
->                 print "habla"
->                 --forkIO $ clasicRafitaSim
->                 --forM_ [0..m-1] $ \i ->
->                 --      forkIO (parroquianoSim i (parroquianos!!i)
->                 --                empanadas outputBuffer)                 
+> classic :: Int -> Int -> IO()
+> classic n m = do let g = mkStdGen randomSeed
+>                  empanadas <- newMVar (0,0)
+>                  parroquianos <- replicateM m $ newMVar 0 
+>                  outputBuffer <- newMVar DS.empty
+>                  _ <- forkIO $ rafitaSimC empanadas n outputBuffer g
+>                  forM_ [0..m-1] $ \i ->
+>                        forkIO (parroquianoSimC i (parroquianos!!i)
+>                                empanadas outputBuffer g)
 >
+> rafitaSimC :: MVar (Int, Int) -> Int 
+>            -> MVar (DS.Seq String) -> StdGen -> IO () 
+> rafitaSimC empanadas n outputBuffer g = 
+>   do emp <- readMVar empanadas 
+>      case (fst emp) of  
+>        0 -> do let gen = rafitaDelay g
+>                addToBuffer outputBuffer $ "Rafita esta cocinando."
+>                modifyMVar_ empanadas rafitaIncrement
+>                threadDelay $ fst gen
+>                addToBuffer outputBuffer $ "Rafita sirvio las empanadas"
+>                rafitaSimC empanadas n outputBuffer g
+>        _ -> rafitaSimC empanadas n outputBuffer g
+>   where rafitaIncrement a = return $ (n, (snd a) + n)
 >
-> clasicRafitaSim = undefined
+> parroquianoSimC :: Int -> MVar Int -> MVar (Int, Int)  
+>                 -> MVar (DS.Seq String) -> StdGen -> IO a
+> parroquianoSimC n parroquiano empanadas outputBuffer g = 
+>   do emp <- readMVar empanadas
+>      case (fst emp) of 
+>        0 -> parroquianoSimC n parroquiano empanadas outputBuffer g
+>        _ -> do let gen = parroquianosDelay g 
+>                addToBuffer outputBuffer $ "Parroquiano " ++ show n ++
+>                                           " come empanada."
+>                modifyMVar_ empanadas parroquianoDecrements
+>                modifyMVar_ parroquiano parroquianoEats
+>                threadDelay $ fst gen
+>                addToBuffer outputBuffer $ "Parroquiano " ++ show n ++ 
+>                                           " tiene hambre."
+>                parroquianoSimC n parroquiano empanadas outputBuffer g
+>   where parroquianoDecrements a = return $ ((fst a) - 1, snd a)
+>         parroquianoEats a = return $ a + 1
 >
+> addToBuffer :: MVar (Seq String) -> String -> IO ()
+> addToBuffer outputBuffer msg  = modifyMVar_ outputBuffer addMsg
+>   where addMsg b = return $ b |> msg
 >
->
+> --getFirst :: MVar (Seq String) -> IO ()
+> getFirst mvar = undefined --modifyMVar mvar printFirst
+>   --where printFirst a = case viewl a of
+>   --                     EmptyL       -> return (,())
+>   --                     item :< rest -> do putStrLn item
+>   --                                        return $ (rest, item)
+>                                           
 
 \end{lstlisting}
 
@@ -221,8 +257,12 @@ Algo
 \noindent
 Solucion con Memoria Transaccional
 
-> transactional :: Int -> Int -> IO ()
-> transactional m n = simulationT m n $ mkStdGen randomSeed
+> --transactional :: Int -> Int -> IO ()
+> --transactional m n = undefined
+>   --do tid <- myThreadId
+>      --installHandler keyboardSignal 
+>      --    (Catch (E.throwTo tid )) Nothing
+>    --  simulationT m n 
 
 \noindent
 Se tiene una tupla en donde el primer elemento es:
@@ -288,6 +328,11 @@ se realizan.
 >                   EmptyL       -> retry
 >                   item :< rest -> do writeTVar buffer rest
 >                                      return item
+>
+> output buffer = 
+>     do str <- atomically $ get buffer
+>        putStrLn str
+>        output buffer
 
 \end{lstlisting}
 
@@ -296,35 +341,41 @@ La simulacion de del sistema.
 
 \begin{lstlisting}
 
-> --myHandler :: [Parroquiano] -> Empanadas -> Buffer [Char] ->IO ()
-> myHandler p e out = do t <- readTVar e
->                        put out ("Rafita preparo " ++ show (snd t) 
->                                                   ++ " empanadas")
->                        --forM_ [0..m-1] $ \i -> aux i (p!!i) FOLD BABY
->                        return $ output out
->
 > --test :: IO ()
-> test tid e = undefined --do --print "hola \n"
->                 --t <- readTVar e
->                 --print $ "Rafita preparo " ++ show (snd t) ++ " empanadas"
->                 --E.throwTo tid ExitSuccess
+> test tid e out = 
+>   do t <- readTVarIO e
+>      print $ "Rafita preparo " ++ show (snd t) ++ " empanadas"
+>      --killThread tid
+>      E.throwTo tid E.ThreadKilled
 >
->
->
-> simulationT n m g = 
->   do parroquianos <- replicateM m newParroquiano
+> 
+> --simulationT :: Int -> Int -> StdGen -> IO a
+> --simulationT n m g = 
+> transactional :: Int -> Int -> IO a
+> transactional m n = 
+>   do let g = mkStdGen randomSeed
+>      parroquianos <- replicateM m newParroquiano
+>      let parroquiano1 = replicate m 0
 >      empanadas <- newRafita
 >      outputBuffer <- newBuffer
 >      tid <- myThreadId
->      installHandler keyboardSignal 
->          (Catch (test tid empanadas)) Nothing
->          --  (Catch (myHandler parroquianos empanadas
->          --                    outputBuffer)) Nothing
->          --(Catch (E.throwTo tid ExitSuccess)) Nothing
->      forkIO $ rafitaSimT n empanadas outputBuffer g
->      forM_ [0..m-1] $ \i ->
->         forkIO (parroquianoSimT i (parroquianos!!i)
+>      installHandler keyboardSignal --Ignore Nothing
+>          (Catch (test tid empanadas outputBuffer)) Nothing
+>         -- (Catch (E.throwTo tid ExitSuccess)) Nothing
+>      forkIO $ E.catch (rafitaSimT m empanadas outputBuffer g)
+>                       (\(e :: E.SomeException) -> 
+>                            do t <- readTVarIO empanadas
+>                               print $ "Rafita preparo " ++ show (snd t) ++ " empanadas"
+>                               tid1 <- myThreadId
+>                               killThread tid )
+>      forM_ [0..n-1] $ \i ->
+>         forkIO $ E.catch (parroquianoSimT i (parroquianos!!i)
 >                           empanadas outputBuffer g)
+>                           ( \(e :: E.SomeException) -> 
+>                            do t <- readTVarIO empanadas
+>                               print $ "Rafita preparo " ++ show (snd t) ++ " empanadas"
+>                               tid1 <- myThreadId
+>                               killThread tid )
 >      output outputBuffer
 > 
 > rafitaSimT n empanadas out g = 
@@ -342,11 +393,6 @@ La simulacion de del sistema.
 >      threadDelay $ fst gen
 >      atomically $ put out ("Parroquiano " ++ show n ++ " tiene hambre.")
 >      parroquianoSimT n parroquiano empanada out (snd gen)
->
-> output buffer = 
->     do str <- atomically $ get buffer
->        putStrLn str
->        output buffer
 
 \end{lstlisting}
 
