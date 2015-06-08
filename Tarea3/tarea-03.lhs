@@ -217,7 +217,7 @@ Algo
 >                             ++ " empanadas")
 >      total <- foldM parroquianoPrinter (0,0) parroquianos
 >      addToBuffer out ("Total " ++ show (fst total))
->      r <- randomRIO (900000,900000)
+>      r <- randomRIO (1000000,1000000)
 >      threadDelay r
 >      killThread main
 >  where parroquianoPrinter (a,b) pa = 
@@ -233,12 +233,12 @@ Algo
 >      case (fst emp) of  
 >        0 -> do let gen = rafitaDelay g
 >                addToBuffer outputBuffer $ "Rafita esta cocinando."
->                modifyMVar_ empanadas rafitaIncrement
+>                a <- takeMVar empanadas
 >                threadDelay $ fst gen
 >                addToBuffer outputBuffer $ "Rafita sirvio las empanadas"
+>                putMVar empanadas (n, (snd a) + n)
 >                rafitaSimC empanadas n outputBuffer g
 >        _ -> rafitaSimC empanadas n outputBuffer g
->   where rafitaIncrement a = return $ (n, (snd a) + n)
 >
 > parroquianoSimC :: Int -> MVar Int -> MVar (Int, Int)  
 >                 -> MVar (DS.Seq String) -> StdGen -> IO a
@@ -247,16 +247,16 @@ Algo
 >      case (fst emp) of 
 >        0 -> parroquianoSimC n parroquiano empanadas outputBuffer g
 >        _ -> do let gen = parroquianosDelay g 
+>                a <- takeMVar empanadas
 >                addToBuffer outputBuffer $ "Parroquiano " ++ show n ++
 >                                           " come empanada."
->                modifyMVar_ empanadas parroquianoDecrements
+>                putMVar empanadas ((fst a) - 1, snd a)
 >                modifyMVar_ parroquiano parroquianoEats
 >                threadDelay $ fst gen
 >                addToBuffer outputBuffer $ "Parroquiano " ++ show n ++ 
 >                                           " tiene hambre."
 >                parroquianoSimC n parroquiano empanadas outputBuffer g
->   where parroquianoDecrements a = return $ ((fst a) - 1, snd a)
->         parroquianoEats a = return $ a + 1
+>   where parroquianoEats a = return $ a + 1
 >
 > addToBuffer :: MVar (Seq String) -> String -> IO ()
 > addToBuffer outputBuffer msg  = modifyMVar_ outputBuffer addMsg
@@ -271,7 +271,9 @@ Algo
 >
 > printBuffer buffer =
 >   do msg <- getFirst buffer
->      putStrLn msg
+>      case msg of
+>        "" -> printBuffer buffer
+>        _  -> putStrLn msg
 >      printBuffer buffer
 
 \end{lstlisting}
@@ -385,7 +387,7 @@ La simulacion de del sistema.
 >                             ++ " empanadas")
 >      total <- foldM parroquianoPrinter (0,0) parroquianos
 >      atomically $ put out ("Total " ++ show (fst total))
->      r <- randomRIO (900000,900000)
+>      r <- randomRIO (1000000,1000000)
 >      threadDelay r
 >      killThread main
 >  where parroquianoPrinter (a,b) pa = 
@@ -420,10 +422,10 @@ Generacion de numero aleatorios.
 \begin{lstlisting}
 
 > rafitaDelay :: (RandomGen g) => g -> (Int, g)
-> rafitaDelay g = randomR (3,5) g
+> rafitaDelay g = randomR (3000000,5000000) g
 >
 > parroquianosDelay :: (RandomGen g) => g -> (Int, g)
-> parroquianosDelay g = randomR (1,7) g
+> parroquianosDelay g = randomR (1000000,7000000) g
 
 \end{lstlisting}
 
