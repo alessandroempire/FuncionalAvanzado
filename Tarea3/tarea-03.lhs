@@ -195,11 +195,36 @@ Algo
 >                  empanadas <- newMVar (0,0)
 >                  parroquianos <- replicateM m $ newMVar 0 
 >                  outputBuffer <- newMVar DS.empty
->                  _ <- forkIO $ rafitaSimC empanadas m outputBuffer g
+>                  mainId <- myThreadId
+>                  rafitaId <- forkIO $ rafitaSimC empanadas m outputBuffer g
+>                  let ph = []
 >                  forM_ [0..n-1] $ \i ->
->                        forkIO (parroquianoSimC i (parroquianos!!i)
->                                empanadas outputBuffer g)
+>                      do hId <- forkIO (parroquianoSimC i (parroquianos!!i)
+>                                        empanadas outputBuffer g)
+>                         return $ hId : ph
+>                  installHandler keyboardSignal
+>                        (Catch (statisticsC mainId rafitaId ph empanadas 
+>                                    parroquianos outputBuffer)) Nothing
 >                  printBuffer outputBuffer
+>
+> statisticsC main raId pId empanadas parroquianos out = 
+>   do 
+>      t <- readMVar empanadas
+>      mapM_ killThread pId
+>      killThread raId
+>      addToBuffer out ("\n\n\n")
+>      addToBuffer out ("Rafita preparo " ++ show (snd t) 
+>                             ++ " empanadas")
+>      total <- foldM parroquianoPrinter (0,0) parroquianos
+>      addToBuffer out ("Total " ++ show (fst total))
+>      r <- randomRIO (900000,900000)
+>      threadDelay r
+>      killThread main
+>  where parroquianoPrinter (a,b) pa = 
+>           do t <- readMVar pa
+>              addToBuffer out ("Parroquiano " ++ show b 
+>                                     ++ " : " ++ show t)
+>              return $ (a+t, b+1)
 >
 > rafitaSimC :: MVar (Int, Int) -> Int 
 >            -> MVar (DS.Seq String) -> StdGen -> IO () 
@@ -250,17 +275,6 @@ Algo
 >      printBuffer buffer
 
 \end{lstlisting}
-
-
-\noindent
-Algo
-
-\begin{lstlisting}
-
->
-
-\end{lstlisting}
-
 
 \noindent
 Solucion con Memoria Transaccional
