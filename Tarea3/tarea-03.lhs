@@ -135,17 +135,14 @@ y otra empleando Memoria Transaccional (\texttt{STM}).
 
 > {-# LANGUAGE ScopedTypeVariables #-}
 >
-> import System.Environment
 > import System.Random
 > import Control.Concurrent
 > import Control.Concurrent.STM
 > import Control.Monad
-> import Control.Monad.IO.Class
 > import Data.Sequence as DS hiding (replicate, replicateM)
 > import System.Exit
 > import System.Posix.Signals
 > import qualified Control.Exception as E
-> import GHC.Conc.Sync (unsafeIOToSTM)
 >
 > randomSeed :: Int
 > randomSeed = 42
@@ -186,7 +183,10 @@ Solucion empleando tecnicas clasicas de concurrencia
 (sincronizacion con MVAR)
 
 \noindent
-Algo
+Simulacion Clasica
+La funcion statisticsC es la que se llama para manejar CTR-C,
+el cual mata los hilos creados por el padre y luego imprime 
+las estadisticas
 
 \begin{lstlisting}
 
@@ -196,7 +196,8 @@ Algo
 >                  parroquianos <- replicateM m $ newMVar 0 
 >                  outputBuffer <- newMVar DS.empty
 >                  mainId <- myThreadId
->                  rafitaId <- forkIO $ rafitaSimC empanadas m outputBuffer g
+>                  rafitaId <- forkIO $ 
+>                                rafitaSimC empanadas m outputBuffer g
 >                  let ph = []
 >                  forM_ [0..n-1] $ \i ->
 >                      do hId <- forkIO (parroquianoSimC i (parroquianos!!i)
@@ -225,7 +226,16 @@ Algo
 >              addToBuffer out ("Parroquiano " ++ show b 
 >                                     ++ " : " ++ show t)
 >              return $ (a+t, b+1)
->
+
+\end{lstlisting}
+
+\noindent
+rafitaSimC se encarga de producir empanadas cada vez que llega a
+cero el nunmero de empanadas en el colador, y una vez que las 
+cocina todas hace putMVar para que los parroquianos puedan comer. 
+
+\begin{lstlisting}
+
 > rafitaSimC :: MVar (Int, Int) -> Int 
 >            -> MVar (DS.Seq String) -> StdGen -> IO () 
 > rafitaSimC empanadas n outputBuffer g = 
@@ -239,7 +249,18 @@ Algo
 >                putMVar empanadas (n, (snd a) + n)
 >                rafitaSimC empanadas n outputBuffer g
 >        _ -> rafitaSimC empanadas n outputBuffer g
->
+
+\end{lstlisting}
+
+\noindent
+Esta funcion la realiza cada parroquiano. 
+Si no hay empanadas, el parroquiano espera que haya empanadas en
+el colador. Si hay empanadas, el parroquiano come empanada, 
+actualiza que el comio, luego que se decremento el numero de empanadas
+y espera una cantidad random para volver a comer. 
+
+\begin{lstlisting}
+
 > parroquianoSimC :: Int -> MVar Int -> MVar (Int, Int)  
 >                 -> MVar (DS.Seq String) -> StdGen -> IO a
 > parroquianoSimC n parroquiano empanadas outputBuffer g = 
@@ -257,7 +278,18 @@ Algo
 >                                           " tiene hambre."
 >                parroquianoSimC n parroquiano empanadas outputBuffer g
 >   where parroquianoEats a = return $ a + 1
->
+
+\end{lstlisting}
+
+\noindent
+Se usa un Una secuencia para llevar una "cola" de mensajes 
+que se deben imprimir en la simulacion. 
+Se crean funciones auxiliares que agregan mensajes al buffer
+y otra funcion que retorna el primer elemento que se debe
+imprimir.
+
+\begin{lstlisting}
+
 > addToBuffer :: MVar (Seq String) -> String -> IO ()
 > addToBuffer outputBuffer msg  = modifyMVar_ outputBuffer addMsg
 >   where addMsg b = return $ b |> msg
