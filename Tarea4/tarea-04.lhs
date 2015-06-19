@@ -52,10 +52,16 @@
 
 \begin{lstlisting}
 
+> import qualified Control.Parallel.Strategies as S
+> import qualified Control.Monad.Par as P
+> import qualified Data.Array.Repa as R
 > import qualified Graphics.HGL as G
+> import Control.Exception
+> import Control.DeepSeq
+> import Data.Array
 > import Data.Word
-> import Data.Ix
 > import Data.List
+> import Data.Ix
 
 \end{lstlisting}
 
@@ -231,9 +237,17 @@ Conjunto de Mandelbrot sobre una ``ventana'' de visualización
 \begin{lstlisting}
 
 > mandelStrat :: Word32 -> Word32 -> [[Word8]]
-> mandelStrat = undefined
+> mandelStrat x y = let matrix = detailMatrix (fromIntegral x) $
+>                                              fromIntegral y
+>                   in S.parMap S.rseq function matrix
+>   where function = S.parMap S.rpar converge
+>
 > mandelPar   :: Word32 -> Word32 -> [[Word8]]
-> mandelPar = undefined
+> mandelPar x y = let matrix = detailMatrix (fromIntegral x) $
+>                                            fromIntegral y
+>                 in map function matrix
+>   where function = P.runPar . P.parMap converge
+>
 > mandelREPA  :: Word32 -> Word32 -> [[Word8]]
 > mandelREPA = undefined
 
@@ -252,5 +266,62 @@ ofrecidas por GHC para determinar cuántos hay disponibles, pero
 intente encontrar un particionado dinámico razonable. Finalmente,
 escriba un programa principal usando \texttt{Criterion} que permita
 comparar la velocidad de ejecución de las tres implantaciones.
+\\
+
+\noindent
+Debemos hacer las funciones que dibujen el conjunto de MandelBrot
+
+\begin{lstlisting}
+
+> draw :: Int -> Int -> G.Window -> [[Word8]] -> IO ()
+> draw w h window matrix = ready w h 0 0 matrix window
+>     where 
+>         ready _ _ _ _ [] _          = return ()
+>         ready w h x y (m:ms) window = do 
+>           G.drawInWindow window $ G.overGraphics $ go x h y m window
+>           ready w h (x+1) y ms window
+>         go _ _ _ [] _          = []
+>         go x h y (m:ms) window = 
+>           let point = G.line (x,y) (x+1, y+1)
+>               in (G.withRGB (toColor (m)) $ point) : go x h (y+1) ms window
+>
+> drawStrat :: Int -> Int -> IO ()
+> drawStrat x y = G.runGraphics $ do
+>     m <- evaluate $ deep $ mandelStrat (fromIntegral x) (fromIntegral y)
+>     w <- G.openWindowEx "Conjunto Mandelbrot" Nothing (x,y) G.DoubleBuffered (Just 1)
+>     G.clearWindow w
+>     draw x y w m
+>     G.getKey w
+>     G.closeWindow w
+>
+> drawPar :: Int -> Int -> IO ()
+> drawPar x y = G.runGraphics $ do
+>     m <- evaluate $ deep $ mandelPar (fromIntegral x) (fromIntegral y)
+>     w <- G.openWindowEx "Conjunto Mandelbrot" Nothing (x,y) G.DoubleBuffered (Just 1)
+>     G.clearWindow w
+>     draw x y w m
+>     G.getKey w
+>     G.closeWindow w
+
+\end{lstlisting}
+
+\noindent
+
+\begin{lstlisting}
+
+> deep :: NFData a => a -> a
+> deep a = deepseq a a
+
+\end{lstlisting}
+\\
+
+\noindent
+Ahora usemos Criterion. 
+
+\begin{lstlisting}
+
+> 
+
+\end{lstlisting}
 
 \end{document}

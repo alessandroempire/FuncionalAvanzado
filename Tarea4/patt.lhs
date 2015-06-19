@@ -61,7 +61,7 @@
 > 
 > import qualified Control.Monad.Par as P
 > import qualified Control.Parallel.Strategies as S
-> import qualified Data.ByteString.Lazy as BS
+> --import qualified Data.ByteString.Lazy as BS
 > import qualified Data.Array.Repa as R
 > import qualified Data.Vector.Unboxed as V
 > import qualified Graphics.HGL as G
