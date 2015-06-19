@@ -58,6 +58,7 @@
 > import qualified Graphics.HGL as G
 > import Control.Exception
 > import Control.DeepSeq
+> import Criterion.Main
 > import Data.Array
 > import Data.Word
 > import Data.List
@@ -274,21 +275,22 @@ Debemos hacer las funciones que dibujen el conjunto de MandelBrot
 \begin{lstlisting}
 
 > draw :: Int -> Int -> G.Window -> [[Word8]] -> IO ()
-> draw w h window matrix = ready w h 0 0 matrix window
+> draw w h window matrix = drawX w h 0 0 matrix window
 >     where 
->         ready _ _ _ _ [] _          = return ()
->         ready w h x y (m:ms) window = do 
->           G.drawInWindow window $ G.overGraphics $ go x h y m window
->           ready w h (x+1) y ms window
->         go _ _ _ [] _          = []
->         go x h y (m:ms) window = 
+>         drawX _ _ _ _ [] _          = return ()
+>         drawX w h x y (m:ms) window = do 
+>           G.drawInWindow window $ G.overGraphics $ drawY x h y m window
+>           drawX w h (x+1) y ms window
+>         drawY _ _ _ [] _          = []
+>         drawY x h y (m:ms) window = 
 >           let point = G.line (x,y) (x+1, y+1)
->               in (G.withRGB (toColor (m)) $ point) : go x h (y+1) ms window
+>           in (G.withRGB (toColor (m)) $ point) : drawY x h (y+1) ms window
 >
 > drawStrat :: Int -> Int -> IO ()
 > drawStrat x y = G.runGraphics $ do
 >     m <- evaluate $ deep $ mandelStrat (fromIntegral x) (fromIntegral y)
->     w <- G.openWindowEx "Conjunto Mandelbrot" Nothing (x,y) G.DoubleBuffered (Just 1)
+>     w <- G.openWindowEx "Conjunto Mandelbrot" Nothing (x,y) 
+>           G.DoubleBuffered (Just 1)
 >     G.clearWindow w
 >     draw x y w m
 >     G.getKey w
@@ -297,7 +299,8 @@ Debemos hacer las funciones que dibujen el conjunto de MandelBrot
 > drawPar :: Int -> Int -> IO ()
 > drawPar x y = G.runGraphics $ do
 >     m <- evaluate $ deep $ mandelPar (fromIntegral x) (fromIntegral y)
->     w <- G.openWindowEx "Conjunto Mandelbrot" Nothing (x,y) G.DoubleBuffered (Just 1)
+>     w <- G.openWindowEx "Conjunto Mandelbrot" Nothing (x,y) 
+>           G.DoubleBuffered (Just 1)
 >     G.clearWindow w
 >     draw x y w m
 >     G.getKey w
@@ -306,6 +309,8 @@ Debemos hacer las funciones que dibujen el conjunto de MandelBrot
 \end{lstlisting}
 
 \noindent
+Definimos \texttt{deep} en funcion de deepseq para evaluar
+por completo las funciones de las estrategias. 
 
 \begin{lstlisting}
 
@@ -316,11 +321,17 @@ Debemos hacer las funciones que dibujen el conjunto de MandelBrot
 \\
 
 \noindent
-Ahora usemos Criterion. 
+Ahora usemos Criterion para medir el rendimiento de las funciones
+\texttt{mandelStart}, \texttt{mandelPar}, \texttt{mandelREPA}
 
 \begin{lstlisting}
 
-> 
+> main = defaultMain [
+>     bgroup "Mandelbrot" [ bench "Strategias" $ whnf mandelStrat 10
+>                         , bench "Monad Par" $ whnf mandelPar 10
+>      --                   , bench "REPA" $ whnf mandelREPA 10
+>                         ]
+>     ]
 
 \end{lstlisting}
 
