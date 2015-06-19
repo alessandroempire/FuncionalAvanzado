@@ -52,6 +52,7 @@
 
 \begin{lstlisting}
 
+> import qualified Graphics.HGL as G
 > import Data.Word
 > import Data.Ix
 > import Data.List
@@ -126,9 +127,9 @@ indicada en la parte superior.
 
 > converge :: (Double,Double) -> Word8
 > converge (x,y) = fromInteger (iterations 0 0 x y 0) :: Word8
->   --where 
-> iterations :: Double -> Double -> Double -> Double -> Integer -> Integer
-> iterations r i x y counter = 
+>   where iterations :: Double -> Double -> Double 
+>                    -> Double -> Integer -> Integer
+>         iterations r i x y counter = 
 >           let r' = r^2 - i^ 2 + x 
 >               i' = 2 * r * i + y
 >           in case counter of 
@@ -138,29 +139,11 @@ indicada en la parte superior.
 
 \end{lstlisting}
 
-
 \noindent
 que itere la función compleja sobre el número complejo hasta converger
 o por un máximo de 255 iteraciones. La función debe retornar el número
 de iteraciones efectivamente completadas.
 \\
-
-\noindent
-Debemos construir una matriz para identificar los puntos en 
-el plano. 
-\\
-
-\begin{lstlisting}
-
-> createMatrix :: Int -> Int -> [[(Int, Int)]]
-> createMatrix x y = groupBy (\ (a,_) (c,_) -> a == c) $ 
->                       range ((0,0), (x,y))
->   where tupleDouble (a,b) = (fromIntegral a, fromIntegral b)
->
-> -- --map (map tupleDouble) 
-
-\end{lstlisting}
-
 
 \noindent
 Para visualizar el Conjunto de Mandelbrot sobre un conjunto
@@ -170,6 +153,14 @@ completadas por la función anterior. Esto es, si \texttt{converge (x,y)}
 produce $n$ como resultado, el pixel $(x,y)$ tendrá el ``color''
 \texttt{RGB n n n} que corresponde al $n-$ésimo gris.
 \\
+
+\begin{lstlisting}
+
+> toColor :: Word8 -> G.RGB
+> toColor x = G.RGB n n n
+>   where n = fromIntegral x
+
+\end{lstlisting}
 
 \noindent
 Las partes interesantes del Conjunto de Mandelbrot están en un
@@ -190,6 +181,41 @@ con $w$ pixels de ancho y $h$ pixels de alto, Ud. puede calcular
   step_{real} &= 4.0 / w \\
   step_{imaginary} &= 4.0 / h 
 \end{align*}
+\\
+
+\noindent
+La funcion \texttt{step} calcula el ancho y el alto de la ventana.
+La funcion \texttt{pixel} se encarga dado un numero complejo (x,y)
+calcular el numero complejo correspondiente. 
+
+\begin{lstlisting}
+
+> step :: Int -> Double
+> step a = 4.0 / fromIntegral a
+>
+> pixel :: Double -> Double -> (Int, Int) -> (Double, Double)
+> pixel stepR stepI (x,y) = (-2.0 + stepR * fromIntegral x , 
+>                            -2.0 + stepI * fromIntegral y)
+
+\end{lstlisting}
+
+\noindent
+Debemos construir una matriz para identificar los puntos en 
+el plano. 
+\\
+
+\begin{lstlisting}
+
+> createMatrix :: Int -> Int -> [[(Int, Int)]]
+> createMatrix x y = groupBy (\ (a,_) (c,_) -> a == c) $ 
+>                       range ((0,0), (x,y))
+>   where tupleDouble (a,b) = (fromIntegral a, fromIntegral b)
+>
+> detailMatrix :: Int -> Int -> [[(Double, Double)]]
+> detailMatrix y x = map (map (pixel (step x) (step y))) $ createMatrix x y
+
+\end{lstlisting}
+
 
 \noindent
 que le permitirán recorrer el intervalo real y el intervalo imaginario
