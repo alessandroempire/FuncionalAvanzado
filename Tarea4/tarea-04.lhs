@@ -271,6 +271,9 @@ comparar la velocidad de ejecución de las tres implantaciones.
 
 \noindent
 Debemos hacer las funciones que dibujen el conjunto de MandelBrot
+Usando estas funciones podemos dibujar el conjunto de MandelBrot
+usando la llamada \texttt{drawStart w h} , \texttt{drawPar w h}
+\texttt{drawRepa w h}, con w pixels de ancho y h pixels de alto. 
 
 \begin{lstlisting}
 
@@ -299,6 +302,16 @@ Debemos hacer las funciones que dibujen el conjunto de MandelBrot
 > drawPar :: Int -> Int -> IO ()
 > drawPar x y = G.runGraphics $ do
 >     m <- evaluate $ deep $ mandelPar (fromIntegral x) (fromIntegral y)
+>     w <- G.openWindowEx "Conjunto Mandelbrot" Nothing (x,y) 
+>           G.DoubleBuffered (Just 1)
+>     G.clearWindow w
+>     draw x y w m
+>     G.getKey w
+>     G.closeWindow w
+> 
+> drawREPA :: Int -> Int -> IO ()
+> drawREPA x y = G.runGraphics $ do
+>     m <- evaluate $ deep $ mandelREPA (fromIntegral x) (fromIntegral y)
 >     w <- G.openWindowEx "Conjunto Mandelbrot" Nothing (x,y) 
 >           G.DoubleBuffered (Just 1)
 >     G.clearWindow w
