@@ -38,9 +38,9 @@
 
 \title{CI4251 - Programación Funcional Avanzada \\ Tarea 4}
 
-\author{Ernesto Hernández-Novich\\
-86-17791\\
-\href{mailto:emhn@usb.ve}{<emhn@usb.ve>}}
+\author{Alessandro La Corte\\
+09-10430\\
+\href{mailto:alessandroempire@gmail.com}{<alessandroempire@gmail.com>}}
 
 \date{Junio 9, 2015}
 
@@ -49,6 +49,20 @@
 \pagebreak
 
 \section*{Conjunto de Mandelbrot}
+
+\begin{lstlisting}
+
+> import Data.Word
+> import Data.Ix
+> import Data.List
+
+\end{lstlisting}
+
+\begin{lstlisting}
+
+>
+
+\end{lstlisting}
 
 \noindent
 Un Conjunto de Mandelbrot es un conjunto de puntos en el plano
@@ -68,9 +82,25 @@ hasta que la magnitud de $z$ sea mayor que 2 (indicando que $z$
 tendría magnitud infinita eventualmente) o se llega a una cantidad
 arbitraria de iteraciones sin que esto ocurra.
 
+\begin{lstlisting}
+
+> z = 0
+>
+> cota :: Double -> Double -> Bool
+> cota a b = (magnitude a b) > 2
+
+\end{lstlisting}
+
 \noindent
 La magnitud de un número complejo $z=a+bi$ se calcula como
 $$|z| = \sqrt{a^2+b^2}$$
+
+\begin{lstlisting}
+
+> magnitude :: Double -> Double -> Double
+> magnitude a b = sqrt $ a^2 + b^2
+
+\end{lstlisting}
 
 \noindent
 Así mismo, calcular la función compleja $z_{k+1} = z^2_k+c$ es muy
@@ -85,9 +115,27 @@ simple si se simplifica la expresión hasta llegar
 \noindent
 Considerando que el punto con coordenadas $(x,y)$ corresponde al
 número complejo $z = x+yi$, implante la función
+\\
+
+\noindent
+Dado el punto en el plano, vamos iterando usando la formula
+indicada en la parte superior. 
+\\
 
 \begin{lstlisting}
+
 > converge :: (Double,Double) -> Word8
+> converge (x,y) = fromInteger (iterations 0 0 x y 0) :: Word8
+>   --where 
+> iterations :: Double -> Double -> Double -> Double -> Integer -> Integer
+> iterations r i x y counter = 
+>           let r' = r^2 - i^ 2 + x 
+>               i' = 2 * r * i + y
+>           in case counter of 
+>               255 -> 255
+>               _   -> if cota r' i' then counter
+>                      else iterations r' i' x y $ counter + 1
+
 \end{lstlisting}
 
 
@@ -96,6 +144,23 @@ que itere la función compleja sobre el número complejo hasta converger
 o por un máximo de 255 iteraciones. La función debe retornar el número
 de iteraciones efectivamente completadas.
 \\
+
+\noindent
+Debemos construir una matriz para identificar los puntos en 
+el plano. 
+\\
+
+\begin{lstlisting}
+
+> createMatrix :: Int -> Int -> [[(Int, Int)]]
+> createMatrix x y = groupBy (\ (a,_) (c,_) -> a == c) $ 
+>                       range ((0,0), (x,y))
+>   where tupleDouble (a,b) = (fromIntegral a, fromIntegral b)
+>
+> -- --map (map tupleDouble) 
+
+\end{lstlisting}
+
 
 \noindent
 Para visualizar el Conjunto de Mandelbrot sobre un conjunto
@@ -138,9 +203,14 @@ Provea tres implantaciones del cálculo de la parte interesante del
 Conjunto de Mandelbrot sobre una ``ventana'' de visualización
 
 \begin{lstlisting}
+
 > mandelStrat :: Word32 -> Word32 -> [[Word8]]
+> mandelStrat = undefined
 > mandelPar   :: Word32 -> Word32 -> [[Word8]]
+> mandelPar = undefined
 > mandelREPA  :: Word32 -> Word32 -> [[Word8]]
+> mandelREPA = undefined
+
 \end{lstlisting}
 
 \noindent
