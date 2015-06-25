@@ -163,7 +163,7 @@ y ademas parsea cuando es fin de linea.
 >            <|> (string "and"   >> return SymAnd)
 >            <|> (string "or"    >> return SymOr)
 >            <|> (string "xor"   >> return SymXor)
->            <?> "Simbolo Incorrecto"
+>            <?> "Incorrect Symbol"
 >
 > eol = try (string ";\n\r") 
 >       <|> try (string ";\r\n")
@@ -171,8 +171,6 @@ y ademas parsea cuando es fin de linea.
 >       <|> try (string ";\r")
 >       <|> string ";"
 >       <?> "end of line"
->
-> example = print $ parse symbolParser "" "true" --BORRAR
 
 \end{lstlisting}
 
