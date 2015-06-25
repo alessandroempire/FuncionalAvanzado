@@ -55,12 +55,8 @@
 
 \begin{lstlisting}
 
-> {-# LANGUAGE OverloadedStrings #-}
->
-> --import Control.Applicative        --((<*))
-> --import Data.Attoparsec.Char8      --(parseOnly, endOfInput)
-> --import Data.Either
 > import Text.ParserCombinators.Parsec
+> import System.Environment
 
 \end{lstlisting}
 
@@ -138,17 +134,28 @@ de valores de nuestro tipo algebráico. En este sentido:
 \noindent
 Así, la función principal del reconocedor sería.
 
+La funcion \texttt{expresiones} se encarga de parsear las expresiones
+separadas por punto y coma. 
+
+La funcion \texttt{lineParser} se encarga de parsear cualquier espacio
+en blanco que tenga por adelante la expresion, y luego parserar
+los simbolos separados por espacios en blanco. 
+
+La funcion \texttt{symbolParser} se encarga de parsear las palabras
+reservadas de nuestro tipo \texttt{Symbol} en Haskell.
+
+La funcion \texttt{oel} nos permite parsear el ; entre expresiones,
+y ademas parsea cuando es fin de linea. 
+
 \begin{lstlisting}
 
 > expresiones :: Parser [[Symbol]]
-> expresiones = endBy lineParser pc1 --(char ';')
+> expresiones = endBy lineParser eol
 >
 > lineParser :: Parser [Symbol]
 > lineParser = do 
 >   spaces
->   sym <- symbolParser `sepBy` spaces
->   spaces
->   return sym
+>   endBy symbolParser spaces
 >
 > symbolParser :: Parser Symbol
 > symbolParser = (string "true"  >> return SymTrue)
@@ -158,15 +165,16 @@ Así, la función principal del reconocedor sería.
 >            <|> (string "xor"   >> return SymXor)
 >            <?> "Simbolo Incorrecto"
 >
-> pc1 :: Parser Char
-> pc1 = between spaces spaces $ (char ';') 
->   
+> eol = try (string ";\n\r") 
+>       <|> try (string ";\r\n")
+>       <|> try (string ";\n")
+>       <|> try (string ";\r")
+>       <|> string ";"
+>       <?> "end of line"
 >
-> main = do
->   print $ parse symbolParser "" "tru"
+> example = print $ parse symbolParser "" "true" --BORRAR
 
 \end{lstlisting}
-
 
 \noindent
 Escriba entonces la función
@@ -198,10 +206,15 @@ con arreglos \emph{inmutables} si Ud. escribe \emph{thunks} de
 manera astuta.
 
 \noindent
-El main
+El programa principal que abre un archivo. 
 
 \begin{lstlisting}
 
+> main = do
+>   input <- getArgs >>= readFile . head
+>   print $ parse expresiones "expresiones" input
+>   print $ input
+>          
 
 \end{lstlisting}
 
