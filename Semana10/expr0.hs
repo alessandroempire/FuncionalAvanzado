@@ -31,3 +31,6 @@ number = do ds <- many1 digit
             return (read ds)
       <?> "number"
 
+main = do parse expr "" "2+2"
+
+    

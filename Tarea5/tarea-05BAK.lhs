@@ -57,10 +57,9 @@
 
 > {-# LANGUAGE OverloadedStrings #-}
 >
-> --import Control.Applicative        --((<*))
-> --import Data.Attoparsec.Char8      --(parseOnly, endOfInput)
-> --import Data.Either
-> import Text.ParserCombinators.Parsec
+> import Control.Applicative  --((<*))
+> import Data.Attoparsec.Char8      --(parseOnly, endOfInput)
+> import Data.Either
 
 \end{lstlisting}
 
@@ -136,20 +135,20 @@ de valores de nuestro tipo algebráico. En este sentido:
 \end{itemize}
 
 \noindent
-Así, la función principal del reconocedor sería.
+Así, la función principal del reconocedor sería
 
 \begin{lstlisting}
 
 > expresiones :: Parser [[Symbol]]
-> expresiones = endBy lineParser pc1 --(char ';')
->
-> lineParser :: Parser [Symbol]
-> lineParser = do 
->   spaces
->   sym <- symbolParser `sepBy` spaces
->   spaces
->   return sym
->
+> expresiones = many $ lineParser <* endOfInput
+
+\end{lstlisting}
+
+\noindent
+Para parsear cada simbolo al tipo de dato de haskell. 
+
+\begin{lstlisting}
+
 > symbolParser :: Parser Symbol
 > symbolParser = (string "true"  >> return SymTrue)
 >            <|> (string "false" >> return SymFalse)
@@ -157,16 +156,21 @@ Así, la función principal del reconocedor sería.
 >            <|> (string "or"    >> return SymOr)
 >            <|> (string "xor"   >> return SymXor)
 >            <?> "Simbolo Incorrecto"
->
-> pc1 :: Parser Char
-> pc1 = between spaces spaces $ (char ';') 
->   
->
-> main = do
->   print $ parse symbolParser "" "tru"
 
 \end{lstlisting}
 
+\noindent
+Parsear cada linea 
+
+\begin{lstlisting}
+
+> lineParser :: Parser [Symbol]
+> lineParser = many $ symbolParser <* (char ';')
+>   --s <- symbolParser
+>   --skipSpace
+>   
+
+\end{lstlisting}
 
 \noindent
 Escriba entonces la función
@@ -202,6 +206,9 @@ El main
 
 \begin{lstlisting}
 
+> main = do 
+>   print $ parseOnly symbolParser " "
+>   print $ parseOnly lineParser "true and false ;"
 
 \end{lstlisting}
 

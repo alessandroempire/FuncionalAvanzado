@@ -26,3 +26,6 @@ main = do input <- getContents
             Left c  -> do putStrLn "Error: "
                           print c
             Right r -> mapM_ print r
+
+goodcsv = "Campo 1,Campo 2,Campo 3\nfoo,bar,baz\nfee,fai,foe\ncurly,larry,moe\n"
+badcsv = "Campo 1,Campo 2,Campo 3\nfoo,bar\nfee,fai,foe\ncurly,larry,moe\n"
