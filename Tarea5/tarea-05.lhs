@@ -57,6 +57,8 @@
 
 > import Text.ParserCombinators.Parsec
 > import System.Environment
+> import Data.Bits
+> import Data.Array
 
 \end{lstlisting}
 
@@ -204,7 +206,7 @@ con arreglos \emph{inmutables} si Ud. escribe \emph{thunks} de
 manera astuta.
 
 \noindent
-El programa principal que abre un archivo. 
+El programa principal que lee un archivo. 
 
 \begin{lstlisting}
 
